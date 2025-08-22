@@ -24,4 +24,5 @@ private:
 	G4ThreeVector pos;
 	G4String name;
 }
+
 #endif

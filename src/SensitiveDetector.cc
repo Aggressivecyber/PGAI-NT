@@ -20,7 +20,6 @@ void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
         }
 }
 void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
-	// Code to execute at the end of the event
 	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 }
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
@@ -32,5 +31,5 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
         myHit->SetPos(step->GetPreStepPoint()->GetPosition());
 
         hitsCollection->insert(myHit);
-	return true; // Return true to indicate the hit was processed
+	return true;
 }
