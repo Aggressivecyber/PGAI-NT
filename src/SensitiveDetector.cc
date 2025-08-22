@@ -2,7 +2,7 @@
 #include "G4SDManager.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4AnalysisManager.hh"
-#include "Hit.hh
+#include "Hit.hh"
 
 SensitiveDetector::SensitiveDetector(G4String name) : G4VSensitiveDetector(name) {
 	fEdep = 0;
@@ -16,7 +16,8 @@ void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 	if (fHCID < 0) {
 		auto fullname = "matrixSD" + "/" + collectionName[0];
 		fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fullname);
-		hce->AddHitsCollection(fHCID, hitsCollection);
+                hce->AddHitsCollection(fHCID, hitsCollection);
+        }
 }
 void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 	// Code to execute at the end of the event
@@ -26,10 +27,10 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	G4double edep = step->GetTotalEnergyDeposit();
 	if (edep == 0.) return false;
 
-	Hit* myHit = new Hit();
-	hit->SetEdep(edep);
-	hit->SetPos(step->GetPreStepPoint()->GetPosition());
+        Hit* myHit = new Hit();
+        myHit->SetEdep(edep);
+        myHit->SetPos(step->GetPreStepPoint()->GetPosition());
 
-	hitsCollection->insert(hit);
+        hitsCollection->insert(myHit);
 	return true; // Return true to indicate the hit was processed
 }
