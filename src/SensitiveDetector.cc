@@ -12,9 +12,9 @@ SensitiveDetector::~SensitiveDetector() {
 }
 G4int fHCID = -1;
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
-	hitsCollection = new G4THitsCollection<Hit>("matrixSD", collectionName[0]);
+	hitsCollection = new G4THitsCollection<Hit>("sd", collectionName[0]);
 	if (fHCID < 0) {
-		auto fullname = "matrixSD" + "/" + collectionName[0];
+		auto fullname = "sd" + "/" + collectionName[0];
 		fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fullname);
                 hce->AddHitsCollection(fHCID, hitsCollection);
         }
