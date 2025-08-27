@@ -8,12 +8,11 @@
 #include "G4String.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4THitsCollection.hh"
-#include "Hit.hh"
 
 class SensitiveDetector : public G4VSensitiveDetector {
 public:
-	SensitiveDetector(G4String name):G4VSensitiveDetector(name) {};
-	~SensitiveDetector() {};
+	SensitiveDetector(G4String name);
+	~SensitiveDetector();
 
 	G4bool ProcessHits(G4Step* step, G4TouchableHistory* history) override;
 	virtual void Initialize(G4HCofThisEvent*);
