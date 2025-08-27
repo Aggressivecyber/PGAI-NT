@@ -8,6 +8,9 @@
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
 	virtual G4VPhysicalVolume* Construct() override;
+	G4LogicalVolume* logicVoxel = nullptr;
+	G4int voxelNx = 0;
+	G4int voxelNy = 0;
 private:
 	G4LogicalVolume* logicMatrixVoxel;
 	G4LogicalVolume* logicHPGe;

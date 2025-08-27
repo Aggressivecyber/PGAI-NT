@@ -40,6 +40,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 		energy.push_back(eVal);
 		spectrum.push_back(1.0);
 	}
+	auto siMpt = new G4MaterialPropertiesTable();
+	siMpt->AddProperty("RINDEX", energy, std::vector<G4double>(nPoints, 3.5));
+	Si->SetMaterialPropertiesTable(siMpt);
 	G4Material* Ni = nist->FindOrBuildMaterial("G4_Ni");
 	G4Material* PE = nist->FindOrBuildMaterial("G4_POLYETHYLENE");
 	G4Material* Galactic = nist->FindOrBuildMaterial("G4_Galactic");
@@ -106,11 +109,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto soildTubs_Fe = new G4Tubs("soildTubs_Fe", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
 	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
 	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	G4int voxelNx = 10;
-	G4int voxelNy = 10;
+    voxelNx = 10;
+    voxelNy = 10;
 	auto soildVoxel = new G4Box("soildVoxel", Voxel_H, (Screen_L*0.98)/voxelNx, (Screen_L*0.98)/voxelNy);
 	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H, Screen_L, Screen_L);
-	G4LogicalVolume* logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
+	logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
 	logicMatrixVoxel = new G4LogicalVolume(soildMatrixVoxel, Galactic, "logicMatrixVoxel");
 	G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, Galactic, "World");
 	G4VPhysicalVolume* physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
@@ -207,11 +210,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 }
 
 void DetectorConstruction::ConstructSDandField() {
-	SensitiveDetector* CMOSsd = new SensitiveDetector("CMOSSD");
-	SensitiveDetector* HPGesd = new SensitiveDetector("HPGESD");
-	logicMatrixVoxel->SetSensitiveDetector(CMOSsd);
+	auto sdManager = G4SDManager::GetSDMpointer();
+	SensitiveDetector* CMOSsd = new SensitiveDetector("CMOS", voxelNx, voxelNy);
+	SensitiveDetector* HPGesd = new SensitiveDetector("HPGE",1,1);
+	logicVoxel->SetSensitiveDetector(CMOSsd);
 	logicHPGe->SetSensitiveDetector(HPGesd);
-	G4SDManager::GetSDMpointer()->AddNewDetector(HPGesd);
-	G4SDManager::GetSDMpointer()->AddNewDetector(CMOSsd);
-	
+	sdManager->AddNewDetector(CMOSsd);
+	sdManager->AddNewDetector(HPGesd);
 }

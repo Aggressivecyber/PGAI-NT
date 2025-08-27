@@ -11,12 +11,19 @@
 
 class SensitiveDetector : public G4VSensitiveDetector {
 public:
-	SensitiveDetector(G4String name);
+	explicit SensitiveDetector(G4String name,G4int nx=1,G4int ny=1);
 	~SensitiveDetector();
 
 	G4bool ProcessHits(G4Step* step, G4TouchableHistory* history) override;
 	virtual void Initialize(G4HCofThisEvent*);
 	virtual void EndOfEvent(G4HCofThisEvent*);
+private:
+	std::ofstream ofs;
+	G4String sdName;
+	G4int mNx = 1;
+	G4int mNy = 1;
+	bool wroteHeader = false;
+	void WriteHeaderIfNeeded();
 };
 
 #endif // !SENSITIVEDETECTOR
