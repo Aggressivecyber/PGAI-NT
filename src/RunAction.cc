@@ -7,7 +7,7 @@ RunAction::RunAction() : G4UserRunAction() {
 
 }
 RunAction::~RunAction() {
-	delete G4AnalysisManager::Instance();
+	delete analysisManager;
 }
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
 	G4int runID = run->GetRunID();
