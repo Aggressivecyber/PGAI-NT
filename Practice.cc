@@ -16,8 +16,7 @@ int main(int argc, char** argv) {
 	G4int precision = 4;
 	G4SteppingVerbose::UseBestUnit(precision);
 	auto runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
-	auto* det = new DetectorConstruction();
-	runManager->SetUserInitialization(det);
+	runManager->SetUserInitialization(new DetectorConstruction());
 	runManager->SetUserInitialization(new MyPhysicsList());
 	runManager->SetUserInitialization(new ActionInitialization());
 	runManager->Initialize();
@@ -28,17 +27,13 @@ int main(int argc, char** argv) {
 		G4String command = "/control/execute";
 		G4String fileName = argv[1];
 		G4cout << "Executing macro: " << fileName << G4endl;
-		uiManager->ApplyCommand(command + " " + fileName);
+		uiManager->ApplyCommand(command+ " "+fileName);
 	}
 	else {
 		uiManager->ApplyCommand("/control/execute vis.mac");
 		ui->SessionStart();
 		delete ui;
 	}
-
-		det->RotateRig(10*CLHEP::deg);
-		runManager->ReinitializeGeometry();
-	
 	delete runManager;
 	delete visManager;
 	return 0;

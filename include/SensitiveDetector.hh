@@ -4,14 +4,14 @@
 #include "G4VSensitiveDetector.hh"
 #include "G4Step.hh"
 #include "G4TouchableHistory.hh"
+#include "DetectorConstruction.hh"
 #include "G4String.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4THitsCollection.hh"
 
-
 class SensitiveDetector : public G4VSensitiveDetector {
 public:
-	explicit SensitiveDetector(G4String name);
+	explicit SensitiveDetector(G4String name,G4int nx=1,G4int ny=1);
 	~SensitiveDetector();
 
 	G4bool ProcessHits(G4Step* step, G4TouchableHistory* history) override;
@@ -20,14 +20,10 @@ public:
 private:
 	std::ofstream ofs;
 	G4String sdName;
+	G4int mNx = 1;
+	G4int mNy = 1;
 	bool wroteHeader = false;
 	void WriteHeaderIfNeeded();
-	G4int eventID{0};
-	G4int copyNo{999};
-	G4double edep_keV{ 0.0 };
-	G4double Ekin_keV{ 0.0 };
-	G4double globalTime_ns{ 0.0 };
-
 };
 
 #endif // !SENSITIVEDETECTOR
