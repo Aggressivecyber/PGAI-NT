@@ -23,7 +23,7 @@
 
 using namespace voxel_num;
 G4VPhysicalVolume* DetectorConstruction::Construct() {
-	//²ÄÁÏ¶¨Òå
+	//ææ–™å®šä¹‰
 	G4NistManager* nist = G4NistManager::Instance();
 	G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
 	G4Material* Pb = nist->FindOrBuildMaterial("G4_Pb");
@@ -32,7 +32,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4Material* Si = nist->FindOrBuildMaterial("G4_Si");
 	G4Material* Al = nist->FindOrBuildMaterial("G4_Al");
 	G4Material* Ge = nist->FindOrBuildMaterial("G4_Ge");
-	//ÉÁË¸Ìå²ÄÁÏ¶¨Òå
+	//é—ªçƒä½“ææ–™å®šä¹‰
 	std::vector<G4double> energy;
 	std::vector<G4double> spectrum;
 	G4double eMin = 1240.0 / 550.0 * eV; // 2.25 eV
@@ -71,7 +71,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4Material* ImageLayer = new G4Material("ImageLayer", 0.323 * density_LiF + 0.647 * density_ZnS_Ag + 0.03 * PE->GetDensity(), 3);
 	ImageLayer->AddMaterial(LiF, 0.323);
 	ImageLayer->AddMaterial(ZnS_Ag, 0.647);
-	ImageLayer->AddMaterial(PE, 0.03); //Eljen Technology ¨C EJ-426 Specification Sheet
+	ImageLayer->AddMaterial(PE, 0.03); //Eljen Technology â€“ EJ-426 Specification Sheet
 	std::vector<G4double> rindex(nPoints, 1.);
 	std::vector<G4double> absLength(nPoints, 40 * CLHEP::cm);
 	G4double FastTimeConst = 200 * ns;
@@ -92,7 +92,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	ImageLayer->SetMaterialPropertiesTable(mpt);
 
 
-	//¼¸ºÎÌå¶¨Òå
+	//å‡ ä½•ä½“å®šä¹‰
 	HPGe_H = 60* mm;
 	G4double HPGe_R = 20* mm;
 	G4double Screen_L = 20 * mm;
@@ -121,7 +121,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, Galactic, "World");
 	G4VPhysicalVolume* physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
 	logicHPGe = new G4LogicalVolume(HPGe, Ge, "logicHPGe");
-	//CMOSÕóÁĞ
+	//CMOSé˜µåˆ—
 	for (G4int i = 0; i < voxelNx; i++) {
 		for (G4int j = 0; j < voxelNy; j++) {
 			G4double xPos = (i - (voxelNx - 1) / 2.0) * (2*Screen_L/voxelNx);
@@ -129,8 +129,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 			G4VPhysicalVolume* physVoxel = new G4PVPlacement(nullptr, G4ThreeVector(0, xPos, yPos), logicVoxel, "Voxel", logicMatrixVoxel, false, i * voxelNy + j);
 		}
 	}
-	fCMOSPV= new G4PVPlacement(nullptr, fCMOSPos0,logicMatrixVoxel, "MatrixVoxel", logicWorld, false, 0);
-	G4VPhysicalVolume* physMatrixVoxel = fCMOSPV;
+	fCmosPhys = new G4PVPlacement(nullptr, fCmosStartPos, logicMatrixVoxel, "MatrixVoxel", logicWorld, false, 0);
+	G4VPhysicalVolume* physMatrixVoxel = fCmosPhys;
 	G4VisAttributes* visAttributesVoxel = new G4VisAttributes(G4Colour(0.8, 0.8, 0.8));
 	visAttributesVoxel->SetForceSolid(true);
 	logicVoxel->SetVisAttributes(visAttributesVoxel);
@@ -140,7 +140,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	test->SetScale(1.);
 	test->SetOffset(-15, -15, -15);
 	//auto logicalScreen = new G4LogicalVolume(soildScreen, Al, "logicalScreen");
-	//²âÊÔ²ÄÁÏ
+	//æµ‹è¯•ææ–™
 	auto logicalScintillator = new G4LogicalVolume(soildScintillator, ImageLayer, "logicalScintillator");
 	auto logicalTubs_Pb = new G4LogicalVolume(soildTubs_Pb, Pb, "logicalTubs_Pb");
 	auto logicalTubs_Al = new G4LogicalVolume(soildTubs_Al, Al, "logicalTubs_Al");
@@ -151,13 +151,21 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	//auto physScreen = new G4PVPlacement(nullptr, G4ThreeVector(40,0,0),logicalScreen, "Screen", logicWorld, 1, 0);
 	auto physScintillator = new G4PVPlacement(nullptr, G4ThreeVector((-film_Scintillator_T / 2) + (40), 0, 0), logicalScintillator, "Scintillator", logicWorld, 1, 0);
 	auto logicaltest = new G4LogicalVolume(test->GetSolid(), Al, "logical");
-	auto logicalcollimator = new G4LogicalVolume(soildcollimator, Pb, "logicalcollimator");
-	new G4PVPlacement(0, G4ThreeVector(), logicaltest, "test", logicWorld, false, 0);
-	auto pRot= new G4RotationMatrix();
-	pRot->rotateX(90 * CLHEP::deg);
-	fHPGePV = new G4PVPlacement(nullptr, fHPGePos0, logicalcollimator, "collimator", logicHPGe, false, 0);
-	G4VPhysicalVolume* physHPGe = fHPGePV;
-	//¿ÉÊÓ»¯ÊôĞÔÉèÖÃ
+        auto logicalcollimator = new G4LogicalVolume(soildcollimator, Pb, "logicalcollimator");
+        new G4PVPlacement(0, G4ThreeVector(), logicaltest, "test", logicWorld, false, 0);
+        auto pRot= new G4RotationMatrix();
+        pRot->rotateX(90 * CLHEP::deg);
+        fHPGePhys = new G4PVPlacement(pRot, G4ThreeVector(fHPGeRadius, 0, fHPGeStartPos.z()), logicHPGe, "HPGe", logicWorld, false, 0);
+        new G4PVPlacement(nullptr, G4ThreeVector(), logicalcollimator, "collimator", logicHPGe, false, 0);
+        G4VPhysicalVolume* physHPGe = fHPGePhys;
+        // Source volume
+        auto solidSource = new G4Tubs("solidSource", 0, 5 * mm, 5 * mm, 0, 2 * CLHEP::pi);
+        auto logicalSource = new G4LogicalVolume(solidSource, Pb, "logicalSource");
+        fSourcePhys = new G4PVPlacement(nullptr, fSourceStartPos, logicalSource, "Source", logicWorld, false, 0);
+        G4VisAttributes* visSource = new G4VisAttributes(G4Colour(1.0, 1.0, 0.0));
+        visSource->SetForceSolid(true);
+        logicalSource->SetVisAttributes(visSource);
+        //å¯è§†åŒ–å±æ€§è®¾ç½®
 	G4VisAttributes* visAttributesCollimator = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	G4VisAttributes* visAttributesHPGe = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	visAttributesCollimator->SetForceWireframe(true);
@@ -223,24 +231,38 @@ void DetectorConstruction::ConstructSDandField() {
 	sdManager->AddNewDetector(HPGesd);
 }
 
-void DetectorConstruction::RotateRig(G4double degZ)
+void DetectorConstruction::RotateRig(G4double angle)
 {
-	G4double phi = degZ * deg;
+        G4double phi = angle;
 	G4RotationMatrix Ry;
 	Ry.rotateY(phi);
 
-	// HPGe: Î»ÖÃ=°Ñ³õÊ¼Î»ÖÃÍ¶µ½°ë¾¶ÉÏ×öÈÆZĞı£¬»òÖ±½Ó°´Ô²ÖÜÉè¶¨
-	G4ThreeVector posHPGe(fRhpge * std::cos(phi), fRhpge * std::sin(phi), fHPGePos0.z());
-	auto rotHPGe = fHPGeRot0 * Ry;   // »úÌåÒ²ËæÖ®×ªÏò£¨ÈçĞè±£³Ö³¯Ïò¹Ì¶¨¾Í±ğ³ËRz£©
+	// HPGe: ä½ç½®=æŠŠåˆå§‹ä½ç½®æŠ•åˆ°åŠå¾„ä¸Šåšç»•Zæ—‹ï¼Œæˆ–ç›´æ¥æŒ‰åœ†å‘¨è®¾å®š
+        G4ThreeVector posHPGe(fHPGeRadius * std::cos(phi), fHPGeRadius * std::sin(phi), fHPGeStartPos.z());
+        auto rotHPGe = fHPGeStartRot * Ry;   // æœºä½“ä¹Ÿéšä¹‹è½¬å‘ï¼ˆå¦‚éœ€ä¿æŒæœå‘å›ºå®šå°±åˆ«ä¹˜Rzï¼‰
 
-	fHPGePV->SetTranslation(posHPGe);
-	fHPGePV->SetRotation(new G4RotationMatrix(rotHPGe)); // ×¢Òâ½»¸ø Geant4 ¿½±´ÓÃ new
+        fHPGePhys->SetTranslation(posHPGe);
+        fHPGePhys->SetRotation(new G4RotationMatrix(rotHPGe));
 
 	// CMOS
-	G4ThreeVector posCMOS(fRcmos * std::cos(phi), fRcmos * std::sin(phi), fCMOSPos0.z());
-	auto rotCMOS = fCMOSRot0 * Ry;
-	fCMOSPV->SetTranslation(posCMOS);
-	fCMOSPV->SetRotation(new G4RotationMatrix(rotCMOS));
+        G4ThreeVector posCMOS(fCmosRadius * std::cos(phi), fCmosRadius * std::sin(phi), fCmosStartPos.z());
+        auto rotCMOS = fCmosStartRot * Ry;
+        fCmosPhys->SetTranslation(posCMOS);
+        fCmosPhys->SetRotation(new G4RotationMatrix(rotCMOS));
+
+        if (fSourcePhys) {
+                G4ThreeVector posSource(fSourceRadius * std::cos(phi), fSourceRadius * std::sin(phi), fSourceStartPos.z());
+                auto rotSource = fSourceStartRot * Ry;
+                fSourcePhys->SetTranslation(posSource);
+                fSourcePhys->SetRotation(new G4RotationMatrix(rotSource));
+        }
 
 	G4RunManager::GetRunManager()->GeometryHasBeenModified();
+}
+
+void DetectorConstruction::SetRadius(G4double hpgeRadius, G4double cmosRadius, G4double sourceRadius)
+{
+        fHPGeRadius = hpgeRadius;
+        fCmosRadius = cmosRadius;
+        fSourceRadius = sourceRadius;
 }
