@@ -11,10 +11,8 @@ public:
 	PrimaryGeneratorAction();
 	~PrimaryGeneratorAction() override;
 	void GeneratePrimaries(G4Event* event) override;
-	void SetParticleGun(G4ParticleGun* gun);
-	G4ParticleGun* GetParticleGun() const;
 private:
-	G4ParticleGun* fParticleGun; // Particle gun for generating primary particles
+        G4ParticleGun* fParticleGun; // Particle gun for generating primary particles
 };
 
 #endif

@@ -15,11 +15,11 @@ int main(int argc, char** argv) {
 	if (argc == 1) { ui = new G4UIExecutive(argc, argv); }
 	G4int precision = 4;
 	G4SteppingVerbose::UseBestUnit(precision);
-	auto runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
-	auto* det = new DetectorConstruction();
-	runManager->SetUserInitialization(det);
-	runManager->SetUserInitialization(new MyPhysicsList());
-	runManager->SetUserInitialization(new ActionInitialization());
+        auto runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
+        auto* det = new DetectorConstruction();
+        runManager->SetUserInitialization(det);
+        runManager->SetUserInitialization(new MyPhysicsList());
+        runManager->SetUserInitialization(new ActionInitialization(det));
 	runManager->Initialize();
 	auto visManager = new G4VisExecutive(argc,argv,"OGL","Quiet");
 	visManager->Initialize();
@@ -30,14 +30,11 @@ int main(int argc, char** argv) {
 		G4cout << "Executing macro: " << fileName << G4endl;
 		uiManager->ApplyCommand(command + " " + fileName);
 	}
-	else {
-		uiManager->ApplyCommand("/control/execute vis.mac");
-		ui->SessionStart();
-		delete ui;
-	}
-
-		det->RotateRig(10*CLHEP::deg);
-		runManager->ReinitializeGeometry();
+        else {
+                uiManager->ApplyCommand("/control/execute vis.mac");
+                ui->SessionStart();
+                delete ui;
+        }
 	
 	delete runManager;
 	delete visManager;
