@@ -5,6 +5,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
+#include "G4SystemOfUnits.hh"
 
 namespace voxel_num
 {
@@ -16,23 +17,30 @@ namespace voxel_num
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-	void RotateRig(G4double degZ);          
-	void SetRadius(G4double r_hpge, G4double r_cmos, G4double r_src); 
-	virtual G4VPhysicalVolume* Construct() override;
-	G4LogicalVolume* logicVoxel = nullptr;
+        void RotateRig(G4double angle);
+        void SetRadius(G4double hpgeRadius, G4double cmosRadius, G4double sourceRadius);
+        G4VPhysicalVolume* Construct() override;
+        G4LogicalVolume* logicVoxel = nullptr;
+
 private:
-	G4LogicalVolume* logicMatrixVoxel;
-	G4LogicalVolume* logicHPGe;
-	G4bool  fCheckOverlaps;
-	void ConstructSDandField() override;
-	G4UserLimits* fStepLimit;
-	G4PVPlacement* fHPGePV = nullptr;
-	G4PVPlacement* fCMOSPV = nullptr;
-	G4PVPlacement* fSourcePV = nullptr;
-	G4double fRhpge = voxel_num::HPGe_H, fRcmos = 40 + voxel_num::Voxel_H;
-	G4ThreeVector fHPGePos0{ 0,0,-voxel_num::HPGe_H }, fCMOSPos0{ 40+voxel_num::Voxel_H,0,0};
-	G4RotationMatrix fHPGeRot0, fCMOSRot0;
-}; 
+        void ConstructSDandField() override;
+        G4LogicalVolume* logicMatrixVoxel;
+        G4LogicalVolume* logicHPGe;
+
+        G4PVPlacement* fHPGePhys = nullptr;
+        G4PVPlacement* fCmosPhys = nullptr;
+        G4PVPlacement* fSourcePhys = nullptr;
+
+        G4double fHPGeRadius = voxel_num::HPGe_H;
+        G4double fCmosRadius = 40 + voxel_num::Voxel_H;
+        G4double fSourceRadius = 800 * CLHEP::mm;
+
+        G4ThreeVector fHPGeStartPos{0, 0, -voxel_num::HPGe_H};
+        G4ThreeVector fCmosStartPos{40 + voxel_num::Voxel_H, 0, 0};
+        G4ThreeVector fSourceStartPos{-800 * CLHEP::mm, 0, 0};
+
+G4RotationMatrix fHPGeStartRot, fCmosStartRot, fSourceStartRot;
+};
 
 
 

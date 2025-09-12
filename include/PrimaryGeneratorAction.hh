@@ -8,13 +8,16 @@ class G4ParticleGun;
 
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 public:
-	PrimaryGeneratorAction();
-	~PrimaryGeneratorAction() override;
-	void GeneratePrimaries(G4Event* event) override;
-	void SetParticleGun(G4ParticleGun* gun);
-	G4ParticleGun* GetParticleGun() const;
+        PrimaryGeneratorAction();
+        ~PrimaryGeneratorAction() override;
+        void GeneratePrimaries(G4Event* event) override;
+        void SetParticleGun(G4ParticleGun* gun);
+        G4ParticleGun* GetParticleGun() const;
+        void SetAngle(G4double angle);
 private:
-	G4ParticleGun* fParticleGun; // Particle gun for generating primary particles
+        G4ParticleGun* fParticleGun; // Particle gun for generating primary particles
+        G4double fAngle = 0.;
+        G4double fSourceRadius = 800 * CLHEP::mm;
 };
 
 #endif
