@@ -13,14 +13,30 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
 	delete fParticleGun; // Clean up the particle gun
 }
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
-	G4int nParticleGun = 1;
-	for (G4int i = 0; i < nParticleGun; i++) {
-		G4double Screen_L = 70 * mm;
-		fParticleGun->SetParticlePosition(G4ThreeVector(-800, (Screen_L)*(0.5-G4UniformRand()), (Screen_L)*(0.5-G4UniformRand())));
-		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1, 0, 0));
-		//G4double minEnergy = 0.1 * CLHEP::MeV;
-		//G4double maxEnergy = 10.0 * CLHEP::MeV;
-		fParticleGun->SetParticleEnergy(4.05*CLHEP::MeV);
-		fParticleGun->GeneratePrimaryVertex(event);
-	}
+        G4int nParticleGun = 1;
+        for (G4int i = 0; i < nParticleGun; i++) {
+                G4double Screen_L = 70 * mm;
+                G4double y = Screen_L * (0.5 - G4UniformRand());
+                G4double z = Screen_L * (0.5 - G4UniformRand());
+                G4ThreeVector pos(-fRsrc, y, z);
+                pos.rotateZ(fAngle);
+                fParticleGun->SetParticlePosition(pos);
+                G4ThreeVector dir(1, 0, 0);
+                dir.rotateZ(fAngle);
+                fParticleGun->SetParticleMomentumDirection(dir);
+                //G4double minEnergy = 0.1 * CLHEP::MeV;
+                //G4double maxEnergy = 10.0 * CLHEP::MeV;
+                fParticleGun->SetParticleEnergy(4.05*CLHEP::MeV);
+                fParticleGun->GeneratePrimaryVertex(event);
+        }
+}
+
+void PrimaryGeneratorAction::SetAngle(G4double angle)
+{
+        fAngle = angle;
+}
+
+void PrimaryGeneratorAction::SetSourceRadius(G4double r)
+{
+        fRsrc = r;
 }
