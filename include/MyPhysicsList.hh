@@ -2,15 +2,18 @@
 #ifndef MyPhysicsList_h
 #define MyPhysicsList_h 1
 
-#include "FTFP_BERT_HP.hh"
+#include "Shielding.hh"
 #include "G4OpticalPhysics.hh"
+#include "G4EmStandardPhysics_option4.hh"
 
-class MyPhysicsList : public FTFP_BERT_HP {
+
+class MyPhysicsList : public Shielding {
 public:
-    MyPhysicsList(): FTFP_BERT_HP()                  
+    MyPhysicsList(): Shielding()                  
     {
         auto opticalPhysics = new G4OpticalPhysics();
         RegisterPhysics(opticalPhysics);
+        ReplacePhysics(new G4EmStandardPhysics_option4());
     }
     ~MyPhysicsList() override = default;
 };
