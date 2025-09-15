@@ -8,6 +8,8 @@
 #include "G4UImanager.hh"
 #include "G4SteppingVerbose.hh"
 #include "MyPhysicsList.hh"
+#include "PrimaryGeneratorAction.hh"
+#include "G4SystemOfUnits.hh"
 
 int main(int argc, char** argv) {
 	std::cout << "Program Start" << std::endl;
@@ -31,9 +33,24 @@ int main(int argc, char** argv) {
 	}
 	else {
 		uiManager->ApplyCommand("/control/execute vis.mac");
+<<<<<<< HEAD
 		ui->SessionStart();
 		delete ui;
 	}
+=======
+                ui->SessionStart();
+                delete ui;
+        }
+
+        G4double rotateAngle = 10 * CLHEP::deg;
+        det->RotateRig(rotateAngle);
+        auto generator = const_cast<PrimaryGeneratorAction*>(static_cast<const PrimaryGeneratorAction*>(runManager->GetUserPrimaryGeneratorAction()));
+        if (generator) {
+                generator->SetAngle(rotateAngle);
+        }
+        runManager->ReinitializeGeometry();
+	
+>>>>>>> refs/remotes/origin/main
 	delete runManager;
 	delete visManager;
 	return 0;
