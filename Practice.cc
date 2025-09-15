@@ -7,6 +7,8 @@
 #include "G4UImanager.hh"
 #include "G4SteppingVerbose.hh"
 #include "MyPhysicsList.hh"
+#include "PrimaryGeneratorAction.hh"
+#include "G4SystemOfUnits.hh"
 
 int main(int argc, char** argv) {
 	std::cout << "Program Start" << std::endl;
@@ -44,7 +46,6 @@ int main(int argc, char** argv) {
 		ui->SessionStart();
 		delete ui;
 	}
-	delete runManager;
-	delete visManager;
-	return 0;
-}
+                ui->SessionStart();
+                delete ui;
+        }
