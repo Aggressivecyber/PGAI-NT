@@ -1,6 +1,5 @@
-#include "G4RunManager.hh"
+#include "G4MTRunManager.hh"
 #include "G4UIExecutive.hh"
-#include "G4RunManagerFactory.hh"
 #include "DetectorConstruction.hh"
 #include "FTFP_BERT.hh"
 #include "ActionInitialization.hh"
@@ -17,13 +16,15 @@ int main(int argc, char** argv) {
 	if (argc == 1) { ui = new G4UIExecutive(argc, argv); }
 	G4int precision = 4;
 	G4SteppingVerbose::UseBestUnit(precision);
-	auto runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
-	runManager->SetUserInitialization(new DetectorConstruction());
+	auto runManager = new G4MTRunManager();
+	auto det = new DetectorConstruction();
+	runManager->SetUserInitialization(det);
 	runManager->SetUserInitialization(new MyPhysicsList());
-	runManager->SetUserInitialization(new ActionInitialization());
+	runManager->SetUserInitialization(new ActionInitialization(det));
 	runManager->Initialize();
 	auto visManager = new G4VisExecutive(argc,argv,"OGL","Quiet");
 	visManager->Initialize();
+	
 	auto uiManager = G4UImanager::GetUIpointer();
 	if (!ui) {
 		G4String command = "/control/execute";
@@ -32,8 +33,16 @@ int main(int argc, char** argv) {
 		uiManager->ApplyCommand(command+ " "+fileName);
 	}
 	else {
+
+		for (int i = 0; i < 3; i++)
+		{
+	
+			det->setDeg(i * 10.);
+			G4RunManager::GetRunManager()->ReinitializeGeometry();
+			runManager->BeamOn(10);
+		}
 		uiManager->ApplyCommand("/control/execute vis.mac");
-<<<<<<< HEAD
+		uiManager->ApplyCommand("/vis/verbose 1");
 		ui->SessionStart();
 		delete ui;
 	}

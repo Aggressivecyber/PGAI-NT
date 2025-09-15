@@ -5,13 +5,15 @@
 #include "G4SystemOfUnits.hh"
 #include "G4RotationMatrix.hh"
 
-PrimaryGeneratorAction::PrimaryGeneratorAction(){
+PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* fdec):temp_dec(fdec){
 	fParticleGun = new G4ParticleGun(1); 
 	auto table = G4ParticleTable::GetParticleTable();
-	fParticleGun->SetParticleDefinition(table->FindParticle("neutron")); 
+	fParticleGun->SetParticleDefinition(table->FindParticle("neutron"));
+	
 }
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
-        delete fParticleGun; // Clean up the particle gun
+	delete fParticleGun; // Clean up the particle gun
+
 }
 void PrimaryGeneratorAction::SetParticleGun(G4ParticleGun* gun) {
         fParticleGun = gun;
@@ -20,20 +22,11 @@ G4ParticleGun* PrimaryGeneratorAction::GetParticleGun() const {
         return fParticleGun;
 }
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
-        G4double screenSize = 70 * mm;
-        G4double y = screenSize * (0.5 - G4UniformRand());
-        G4double z = screenSize * (0.5 - G4UniformRand());
-        G4ThreeVector position(-fSourceRadius, y, z);
-        G4RotationMatrix rot;
-        rot.rotateZ(fAngle);
-        position = rot * position;
-        G4ThreeVector direction = (-position).unit();
-        fParticleGun->SetParticlePosition(position);
-        fParticleGun->SetParticleMomentumDirection(direction);
-        fParticleGun->SetParticleEnergy(4.05 * CLHEP::MeV);
-        fParticleGun->GeneratePrimaryVertex(event);
-}
 
-void PrimaryGeneratorAction::SetAngle(G4double angle) {
-        fAngle = angle;
+		G4double Screen_L = 70 * mm;
+		fParticleGun->SetParticlePosition(G4ThreeVector((-800)*std::cos(temp_dec->getDeg()*CLHEP::pi/180), (((Screen_L)*(0.5-G4UniformRand())-800)*std::sin(temp_dec->getDeg() * CLHEP::pi / 180)), (Screen_L)*(0.5-G4UniformRand())));
+		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(std::cos(temp_dec->getDeg() * CLHEP::pi / 180), std::sin(temp_dec->getDeg() * CLHEP::pi / 180), 0));
+		fParticleGun->SetParticleEnergy(4.05*CLHEP::MeV);
+		fParticleGun->GeneratePrimaryVertex(event);
+
 }
