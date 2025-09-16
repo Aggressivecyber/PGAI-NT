@@ -16,15 +16,14 @@ public:
 	void Draw() override;
 	void Print() override;
 
-	G4double edep;
-	G4ThreeVector pos;
-	G4String particleName;
-	G4double globalTime;
-	G4int num_X;
-	G4int num_Y;
-	G4double ux;
-	G4double uy;
-	G4double uz;
+	G4double edep{};
+	G4ThreeVector pos{};
+	G4String particleName{};
+	G4double globalTime{};
+	G4int copyNo{};
+	G4double ux{};
+	G4double uy{};
+	G4double uz{};
 
 };
 

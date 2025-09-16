@@ -16,6 +16,7 @@ public:
         ReplacePhysics(new G4EmStandardPhysics_option4());
     }
     ~MyPhysicsList() override = default;
+    void SetCuts() override;
 };
 
 #endif

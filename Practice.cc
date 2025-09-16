@@ -11,41 +11,47 @@
 #include "G4SystemOfUnits.hh"
 
 int main(int argc, char** argv) {
-	std::cout << "Program Start" << std::endl;
-	G4UIExecutive* ui = nullptr;
-	if (argc == 1) { ui = new G4UIExecutive(argc, argv); }
-	G4int precision = 4;
-	G4SteppingVerbose::UseBestUnit(precision);
-	auto runManager = new G4MTRunManager();
-	auto det = new DetectorConstruction();
-	runManager->SetUserInitialization(det);
-	runManager->SetUserInitialization(new MyPhysicsList());
-	runManager->SetUserInitialization(new ActionInitialization(det));
-	runManager->Initialize();
-	auto visManager = new G4VisExecutive(argc,argv,"OGL","Quiet");
-	visManager->Initialize();
-	
-	auto uiManager = G4UImanager::GetUIpointer();
-	if (!ui) {
-		G4String command = "/control/execute";
-		G4String fileName = argv[1];
-		G4cout << "Executing macro: " << fileName << G4endl;
-		uiManager->ApplyCommand(command+ " "+fileName);
-	}
-	else {
+    std::cout << "Program Start" << std::endl;
 
-		for (int i = 0; i < 3; i++)
-		{
-	
-			det->setDeg(i * 10.);
-			G4RunManager::GetRunManager()->ReinitializeGeometry();
-			runManager->BeamOn(10);
-		}
-		uiManager->ApplyCommand("/control/execute vis.mac");
-		uiManager->ApplyCommand("/vis/verbose 1");
-		ui->SessionStart();
-		delete ui;
-	}
-                ui->SessionStart();
-                delete ui;
+    G4UIExecutive* ui = (argc == 1) ? new G4UIExecutive(argc, argv) : nullptr;
+    G4SteppingVerbose::UseBestUnit(4);
+
+    auto runManager = new G4MTRunManager();
+    runManager->SetNumberOfThreads(8);
+
+    auto det = new DetectorConstruction();
+    runManager->SetUserInitialization(det);
+    runManager->SetUserInitialization(new MyPhysicsList());
+    runManager->SetUserInitialization(new ActionInitialization(det));
+    runManager->Initialize();
+
+    auto uiManager = G4UImanager::GetUIpointer();
+
+    if (!ui) {
+        const G4String fileName = argv[1];
+        G4cout << "Executing macro (batch): " << fileName << G4endl;
+        uiManager->ApplyCommand("/control/execute " + fileName);
+
+        for (int i = 0; i < 6; ++i) {
+            det->setDeg(i * 30.0);
+            G4RunManager::GetRunManager()->ReinitializeGeometry();
+            runManager->BeamOn(100000);
         }
+    }
+    else {
+        auto visManager = new G4VisExecutive();
+        visManager->Initialize();
+        for (int i = 0; i <3; ++i) {
+            det->setDeg(i * 30.0);
+            G4RunManager::GetRunManager()->ReinitializeGeometry();
+            runManager->BeamOn(100);
+        }
+        uiManager->ApplyCommand("/control/execute vis.mac");
+        ui->SessionStart();
+        delete visManager;
+        delete ui;          
+    }
+
+    delete runManager;
+    return 0;
+}

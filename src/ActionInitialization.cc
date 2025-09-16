@@ -3,10 +3,10 @@
 #include "RunAction.hh"
 
 void ActionInitialization::BuildForMaster() const {
-	SetUserAction(new RunAction());
+	SetUserAction(new RunAction(1));
 }
 void ActionInitialization::Build() const {
 	SetUserAction(new PrimaryGeneratorAction(fDet));
-	SetUserAction(new RunAction());
+	SetUserAction(new RunAction(0));
 
 }

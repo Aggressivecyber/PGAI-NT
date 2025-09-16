@@ -24,6 +24,8 @@ private:
 	virtual void ConstructSDandField();
 	G4UserLimits* fStepLimit;
 	G4double deg{ 0.};
+	G4VSensitiveDetector* HPGEsd = nullptr;
+	G4VSensitiveDetector* CMOSsd = nullptr;
 };
 
 

@@ -34,7 +34,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	std::vector<G4double> spectrum;
 	G4double eMin = 1240.0 / 550.0 * eV; // 2.25 eV
 	G4double eMax = 1240.0 / 380.0 * eV; // 3.26 eV
-	G4int nPoints = 20;
+	G4int nPoints = 4;
 	for (int i = 0; i < nPoints; i++) {
 		G4double eVal = eMin + i * (eMax - eMin) / (nPoints - 1);
 		energy.push_back(eVal);
@@ -71,10 +71,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	ImageLayer->AddMaterial(PE, 0.03); //Eljen Technology – EJ-426 Specification Sheet
 	std::vector<G4double> rindex(nPoints, 1.);
 	std::vector<G4double> absLength(nPoints, 40 * CLHEP::cm);
-	G4double FastTimeConst = 200 * ns;
-	G4double SlowTimeConst = 2000 * ns;
+	G4double FastTimeConst = 200. * ns;
+	G4double SlowTimeConst = 2000. * ns;
 	G4double YieldRatio = 0.6;
-	G4double ScintYield = 1000. / MeV;
+	G4double ScintYield = 60000.*(0.01)/ MeV;
 	auto mpt = new G4MaterialPropertiesTable();
 	mpt->AddProperty("RINDEX", energy, rindex);
 	mpt->AddProperty("ABSLENGTH", energy, absLength);
@@ -174,7 +174,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4double R = 10 * mm;
 	for (std::vector<G4LogicalVolume*>::iterator it = logicalTubs.begin(); it != logicalTubs.end(); it++) {
 		G4double theta = i * ((1. / 3.) * CLHEP::pi);
-		std::cout << "i = " << i << std::endl;
+
 		std::string name = ("tubs");
 		std::string temp = name;
 		name += "_";
@@ -214,12 +214,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 void DetectorConstruction::ConstructSDandField() {
 	auto sdManager = G4SDManager::GetSDMpointer();
-	SensitiveDetector* CMOSsd = new SensitiveDetector(G4String("CMOS"), 0);
-	SensitiveDetector* HPGesd = new SensitiveDetector(G4String("HPGE"), 1);
-	logicVoxel->SetSensitiveDetector(CMOSsd);
-	logicHPGe->SetSensitiveDetector(HPGesd);
+	CMOSsd = new SensitiveDetector(G4String("CMOS"), 0);
 	sdManager->AddNewDetector(CMOSsd);
-	sdManager->AddNewDetector(HPGesd);
+	logicVoxel->SetSensitiveDetector(CMOSsd); // CMOSsd 绑定到 logicVoxel
+
+	HPGEsd = new SensitiveDetector(G4String("HPGE"), 1);
+	sdManager->AddNewDetector(HPGEsd);
+	logicHPGe->SetSensitiveDetector(HPGEsd); // HPGEsd 绑定到 logicHPGe
 }
 
 void DetectorConstruction::setDeg(double nDeg)
