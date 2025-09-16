@@ -31,29 +31,43 @@ void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
-	auto hit = new myHit();
 	auto track = step->GetTrack();
-	if (!track) return false;
-	auto preStep = step->GetPreStepPoint();
-	if (!preStep) return false;
-	if (preStep->GetStepStatus()==fGeomBoundary)
+	if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary && step->GetTrack()->GetDefinition()->GetParticleName() == "photon")
 	{
 		track->SetTrackStatus(fStopAndKill);
 	}
-	auto postStep = step->GetPostStepPoint();
-	if (!postStep) return false;
-	auto touchable = postStep->GetTouchableHandle();
-	if (!touchable) return false;
+
+	auto preStep = step->GetPreStepPoint();
+	if (!preStep)
+	{
+		return false;
+	}
+
+	auto touchable = preStep->GetTouchableHandle();
+	if (!touchable)
+	{
+		return false;
+	}
+
 	auto history1 = touchable->GetHistory();
-	if (!history1) return false;
-	int nem_copyNo = 0;
-	if (touchable)
-		nem_copyNo = touchable->GetCopyNumber();
-	hit->edep = step->GetTotalEnergyDeposit()/keV;
+	if (!history1)
+	{
+		return false;
+	}
+
+	auto hit = new myHit();
+	hit->edep = step->GetTotalEnergyDeposit() / keV;
 	hit->pos = preStep->GetPosition();
 	hit->particleName = track->GetParticleDefinition()->GetParticleName();
-	hit->globalTime =preStep->GetGlobalTime();
+	hit->globalTime = preStep->GetGlobalTime();
+
+	G4int nem_copyNo = -1;
+	if (const auto* volume = touchable->GetVolume())
+	{
+		nem_copyNo = volume->GetCopyNo();
+	}
 	hit->copyNo = nem_copyNo;
+
 	G4ThreeVector local = history1->GetTopTransform().TransformPoint(hit->pos);
 	hit->ux = local.x();
 	hit->uy = local.y();

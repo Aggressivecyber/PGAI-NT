@@ -15,8 +15,7 @@ int main(int argc, char** argv) {
 
     G4UIExecutive* ui = (argc == 1) ? new G4UIExecutive(argc, argv) : nullptr;
 
-    auto runManager = new G4MTRunManager();
-    runManager->SetNumberOfThreads(8);
+    auto runManager = new G4RunManager();
 
     auto det = new DetectorConstruction();
     runManager->SetUserInitialization(det);
@@ -31,16 +30,16 @@ int main(int argc, char** argv) {
         G4cout << "Executing macro (batch): " << fileName << G4endl;
         uiManager->ApplyCommand("/control/execute " + fileName);
 
-        for (int i = 0; i < 6; ++i) {
-            det->setDeg(i * 30.0);
+        for (int i = 0; i < 30; ++i) {
+            det->setDeg(i * 12.0);
             G4RunManager::GetRunManager()->ReinitializeGeometry();
-            runManager->BeamOn(100000);
+            runManager->BeamOn(1000);
         }
     }
     else {
         auto visManager = new G4VisExecutive();
         visManager->Initialize();
-        for (int i = 0; i <3; ++i) {
+        for (int i = 0; i <4; ++i) {
             det->setDeg(i * 30.0);
             G4RunManager::GetRunManager()->ReinitializeGeometry();
             runManager->BeamOn(100);

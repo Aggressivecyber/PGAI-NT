@@ -18,11 +18,11 @@ public:
 	double getDeg();
 
 private:
-	G4LogicalVolume* logicMatrixVoxel;
-	G4LogicalVolume* logicHPGe;
-	G4bool  fCheckOverlaps;
-	virtual void ConstructSDandField();
-	G4UserLimits* fStepLimit;
+	G4LogicalVolume* logicMatrixVoxel = nullptr;
+	G4LogicalVolume* logicHPGe = nullptr;
+	G4bool  fCheckOverlaps = false;
+	void ConstructSDandField() override;
+	G4UserLimits* fStepLimit = nullptr;
 	G4double deg{ 0.};
 	G4VSensitiveDetector* HPGEsd = nullptr;
 	G4VSensitiveDetector* CMOSsd = nullptr;

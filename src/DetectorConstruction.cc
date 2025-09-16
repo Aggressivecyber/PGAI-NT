@@ -18,6 +18,7 @@
 #include "SensitiveDetector.hh"
 #include "G4SDManager.hh"
 #include <cmath>
+#include "G4Exception.hh"
 
 G4VPhysicalVolume* DetectorConstruction::Construct() {
 	//²ÄÁÏ¶¨Òå
@@ -94,7 +95,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4double HPGe_R = 20 * mm;
 	G4double Screen_L = 20 * mm;
 	G4double Screen_H = 1 * mm;
-	G4double film_Scintillator_T = 250 * um;
+	G4double film_Scintillator_T = 1* mm;
 	G4double Tubs_H = 30 / 2 * mm;
 	G4double Tubs_R = 2.9 * mm;
 	G4double worldSize = 1 * m;
@@ -110,8 +111,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
 	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
 	voxelNum vnum;
-	vnum.setNumX(10);
-	vnum.setNumY(10);
+	vnum.setNumX(128);
+	vnum.setNumY(128);
 	auto soildVoxel = new G4Box("soildVoxel", Voxel_H, (Screen_L * 0.98) / vnum.GetNx(), (Screen_L * 0.98) / vnum.GetNy());
 	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H, Screen_L, Screen_L);
 	logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
@@ -214,14 +215,28 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 void DetectorConstruction::ConstructSDandField() {
 	auto sdManager = G4SDManager::GetSDMpointer();
-	CMOSsd = new SensitiveDetector(G4String("CMOS"), 0);
-	sdManager->AddNewDetector(CMOSsd);
-	logicVoxel->SetSensitiveDetector(CMOSsd); 
+	if (!logicVoxel || !logicHPGe)
+	{
+		G4Exception("DetectorConstruction::ConstructSDandField", "DC0001", FatalException,
+			"Sensitive detector volumes are not available.");
+		return;
+	}
 
-	HPGEsd = new SensitiveDetector(G4String("HPGE"), 1);
-	sdManager->AddNewDetector(HPGEsd);
-	logicHPGe->SetSensitiveDetector(HPGEsd); 
+	if (!CMOSsd)
+	{
+		CMOSsd = new SensitiveDetector(G4String("CMOS"), 0);
+		sdManager->AddNewDetector(CMOSsd);
+	}
+	SetSensitiveDetector(logicVoxel, CMOSsd);
+
+	if (!HPGEsd)
+	{
+		HPGEsd = new SensitiveDetector(G4String("HPGE"), 1);
+		sdManager->AddNewDetector(HPGEsd);
+	}
+	SetSensitiveDetector(logicHPGe, HPGEsd);
 }
+
 
 void DetectorConstruction::setDeg(double nDeg)
 {

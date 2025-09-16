@@ -3,26 +3,8 @@
 #include "G4AnalysisManager.hh"
 #include <atomic>
 
-RunAction::RunAction(bool pMaster):isMaster(pMaster) {
-
-}
-RunAction::~RunAction() {
-}
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
+RunAction::RunAction() {
 	auto man = G4AnalysisManager::Instance();
-	man->SetVerboseLevel(1);
-	man->SetDefaultFileType("csv");
-	static std::atomic<int> runCounter{ 0 };
-	G4int currentRunNumber = runCounter.load();
-	if (isMaster) {
-		currentRunNumber = runCounter.fetch_add(1) + 1;
-	}
-	else {
-		currentRunNumber = runCounter.load();
-	}
-	G4cout << "Run Start" << G4endl;
-	man->SetFileName("hits" + std::to_string(currentRunNumber));
-	man->OpenFile();
 	if (man->GetNtuple(0) == nullptr) {
 		man->SetNtupleMerging(true);
 		man->SetVerboseLevel(1);
@@ -39,17 +21,28 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 		man->CreateNtupleSColumn("pname");
 		man->FinishNtuple();
 	}
+}
 
-		
-	}
+RunAction::~RunAction() {
+}
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
+	auto man = G4AnalysisManager::Instance();
+	man->SetVerboseLevel(1);
+	man->SetDefaultFileType("csv");
+	static std::atomic<int> runCounter{ 0 };
+	G4int currentRunNumber = runCounter.load();
+		currentRunNumber = runCounter.fetch_add(1) + 1;
+	G4cout << "Run Start" << G4endl;
+	man->SetFileName("hits" + std::to_string(currentRunNumber));
+	man->OpenFile();
+
+}
 	
 
 void RunAction::EndOfRunAction(const G4Run* aRun) {
-	G4cout << "Run End" << G4endl;
-	if (isMaster)
-	{
+
+		G4cout << "Run End" << G4endl;
 		auto man = G4AnalysisManager::Instance();
 		man->Write();
 		man->CloseFile();
-	}
 }
