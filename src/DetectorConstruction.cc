@@ -216,11 +216,11 @@ void DetectorConstruction::ConstructSDandField() {
 	auto sdManager = G4SDManager::GetSDMpointer();
 	CMOSsd = new SensitiveDetector(G4String("CMOS"), 0);
 	sdManager->AddNewDetector(CMOSsd);
-	logicVoxel->SetSensitiveDetector(CMOSsd); // CMOSsd 绑定到 logicVoxel
+	logicVoxel->SetSensitiveDetector(CMOSsd); 
 
 	HPGEsd = new SensitiveDetector(G4String("HPGE"), 1);
 	sdManager->AddNewDetector(HPGEsd);
-	logicHPGe->SetSensitiveDetector(HPGEsd); // HPGEsd 绑定到 logicHPGe
+	logicHPGe->SetSensitiveDetector(HPGEsd); 
 }
 
 void DetectorConstruction::setDeg(double nDeg)

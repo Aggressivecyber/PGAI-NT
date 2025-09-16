@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
     std::cout << "Program Start" << std::endl;
 
     G4UIExecutive* ui = (argc == 1) ? new G4UIExecutive(argc, argv) : nullptr;
-    G4SteppingVerbose::UseBestUnit(4);
 
     auto runManager = new G4MTRunManager();
     runManager->SetNumberOfThreads(8);
