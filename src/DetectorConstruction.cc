@@ -128,8 +128,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
 	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
 	voxelNum vnum;
-	vnum.setNumX(10);
-	vnum.setNumY(10);
+	vnum.setNumX(256);
+	vnum.setNumY(256);
 	auto soildScintillator1 = new G4Box("soildScintillator", Screen_H+0.3*mm, Screen_L + 0.2* mm, Screen_L + 0.2 * mm);
 	auto soildVoxel = new G4Box("soildVoxel", Voxel_H/2, CMOS_L  / vnum.GetNx(), CMOS_L  / vnum.GetNy());
 	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H/2, CMOS_L, CMOS_L);
@@ -253,38 +253,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	surfpmma->SetFinish(groundfrontpainted);
 	surfpmma->SetModel(unified);
 	auto mptSide = new G4MaterialPropertiesTable();
-	mptSide->AddProperty("REFLECTIVITY", energy, std::vector<G4double>(nPoints, 0.03));
+	mptSide->AddProperty("REFLECTIVITY", energy, std::vector<G4double>(nPoints, 1.));
 	surfpmma->SetMaterialPropertiesTable(mptSide);
 	new G4LogicalSkinSurface("SurfacePMMA", logicPMMA, surfpmma);
 
-	auto surfIdeal1 = new G4OpticalSurface("Scint_PMMA_Ideal");
-	surfIdeal1->SetType(dielectric_dielectric);
-	surfIdeal1->SetModel(unified);
-	surfIdeal1->SetFinish(polished);
-
-
-	auto surfIdeal2 = new G4OpticalSurface("Scint_PMMA_Ideal");
-	surfIdeal2->SetType(dielectric_dielectric);
-	surfIdeal2->SetModel(unified);
-	surfIdeal2->SetFinish(polished);
-
-	auto surfIdeal3 = new G4OpticalSurface("Scint_PMMA_Ideal");
-	surfIdeal3->SetType(dielectric_dielectric);
-	surfIdeal3->SetModel(unified);
-	surfIdeal3->SetFinish(polished);
-
-	auto surfIdeal4 = new G4OpticalSurface("Scint_PMMA_Ideal");
-	surfIdeal4->SetType(dielectric_dielectric);
-	surfIdeal4->SetModel(unified);
-	surfIdeal4->SetFinish(polished);
-
-
-	new G4LogicalBorderSurface("pmmaToScint", phyPMMA, phyScint, surfIdeal1);
-	new G4LogicalBorderSurface("scintToPMMA", phyScint, phyPMMA, surfIdeal2);
-	new G4LogicalBorderSurface("PMMA_to_Martrix", phyPMMA, physMatrixVoxel, surfIdeal3);
-	new G4LogicalBorderSurface("Martrix_to_PMMA", physMatrixVoxel, phyPMMA, surfIdeal4);
-	for (auto* pv : *G4PhysicalVolumeStore::GetInstance())
-		pv->CheckOverlaps(1000, 0., true);
 	return physWorld;
 }
 

@@ -23,14 +23,17 @@ SensitiveDetector::~SensitiveDetector()
 }
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
-	G4cout << "SensitiveDetector::Initialize called, this=" << this << G4endl;
 	auto man =G4SDManager::GetSDMpointer();
 	fHitsCollection = new MyHitsCollection(this->GetName(), collectionName[0]);
 	if (fHCID<0)
-	{if (man->GetCollectionID(fHitsCollection)>0)
 	{
-		fHCID = man->GetCollectionID(fHitsCollection); 
-	}
+		fHCID = man->GetCollectionID(collectionName[0]);
+		if (fHCID < 0)
+		{
+			G4Exception("SensitiveDetector::Initialize", "SD001", JustWarning,
+				"Failed to obtain collection ID for hits collection");
+			return;
+		}
 	}
 	hce->AddHitsCollection(fHCID, fHitsCollection);
 }
