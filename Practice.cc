@@ -18,9 +18,11 @@ int main(int argc, char** argv) {
     auto runManager = new G4RunManager();
 
     auto det = new DetectorConstruction();
-    runManager->SetUserInitialization(det);
     runManager->SetUserInitialization(new MyPhysicsList());
     runManager->SetUserInitialization(new ActionInitialization(det));
+    runManager->SetUserInitialization(det);
+   
+
     runManager->Initialize();
 
     auto uiManager = G4UImanager::GetUIpointer();
@@ -39,12 +41,12 @@ int main(int argc, char** argv) {
     else {
         auto visManager = new G4VisExecutive();
         visManager->Initialize();
-      for (int i = 0; i <6; ++i) {
+     /* for (int i = 0; i <6; ++i) {
             det->setDeg(i * 80.0);
             G4RunManager::GetRunManager()->ReinitializeGeometry();
             runManager->BeamOn(100);
        }
-        
+       */ 
     	uiManager->ApplyCommand("/control/execute vis.mac");
         ui->SessionStart();
         delete visManager;

@@ -20,7 +20,6 @@ SensitiveDetector::SensitiveDetector(const G4String& name,G4int fSDtag) : G4VSen
 }
 SensitiveDetector::~SensitiveDetector()
 {
-	fHCID = -1;
 }
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
@@ -30,19 +29,14 @@ void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 	if (fHCID<0)
 	{if (man->GetCollectionID(fHitsCollection)>0)
 	{
-		fHCID = man->GetCollectionID(fHitsCollection); hce->AddHitsCollection(fHCID, fHitsCollection);
+		fHCID = man->GetCollectionID(fHitsCollection); 
 	}
 	}
-
+	hce->AddHitsCollection(fHCID, fHitsCollection);
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
 	auto track = step->GetTrack();
-	if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary && step->GetTrack()->GetDefinition()->GetParticleName() == "opticalphoton")
-	{
-		track->SetTrackStatus(fStopAndKill);
-	}
-
 	auto preStep = step->GetPreStepPoint();
 	if (!preStep)
 	{

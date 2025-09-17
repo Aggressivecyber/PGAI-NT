@@ -9,7 +9,6 @@ public:
 	inline ActionInitialization(DetectorConstruction* det) : fDet(det) {}
 	~ActionInitialization() override = default;
 	void Build() const override;
-	void BuildForMaster() const override;
 private:
 	DetectorConstruction* fDet;
 };
