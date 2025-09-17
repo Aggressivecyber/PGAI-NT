@@ -114,7 +114,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4double HPGe_H = 60 * mm;
 	G4double HPGe_R = 20 * mm;
 	G4double Screen_L = 20 * mm;
-	G4double Screen_H = 3 * mm;
+	G4double Screen_H = 1.1 * mm;
 	G4double CMOS_L = 18 * mm;
 	G4double film_Scintillator_T = 1 * mm;
 	G4double Tubs_H = 30 / 2 * mm;
@@ -135,10 +135,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	voxelNum vnum;
 	vnum.setNumX(10);
 	vnum.setNumY(10);
-	auto soildScintillator1 = new G4Box("soildScintillator1", Screen_H +0.8*mm, Screen_L+0.8*mm, Screen_L+0.8 * mm);
 	auto soildVoxel = new G4Box("soildVoxel", Voxel_H/2, CMOS_L  / vnum.GetNx(), CMOS_L  / vnum.GetNy());
 	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H/2, CMOS_L, CMOS_L);
-	auto soildSupport = new G4SubtractionSolid("Support", soildScreen, soildScintillator1);
+	auto soildSupport = new G4SubtractionSolid("Support", soildScreen, soildScintillator);
 	logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
 	logicMatrixVoxel = new G4LogicalVolume(soildMatrixVoxel, Galactic, "logicMatrixVoxel");
 	auto logicSupport = new G4LogicalVolume(soildSupport, Al, "logicSupport");
@@ -234,7 +233,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	logicalScintillator->SetUserLimits(userLimits2);
 	G4VisAttributes* visAttributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	logicWorld->SetVisAttributes(visAttributes);
-	new G4PVPlacement(pRot1, G4ThreeVector((-film_Scintillator_T / 2) + (40) * std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40))* std::sin(getDeg() * CLHEP::pi / 180),0) ,logicSupport, "Support", logicWorld, false, 0,1);
+	new G4PVPlacement(pRot1, G4ThreeVector((-film_Scintillator_T / 2 + 40) * std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40))* std::sin(getDeg() * CLHEP::pi / 180),0) ,logicSupport, "Support", logicWorld, false, 0,1);
 	new G4LogicalSkinSurface("SurfaceSupport", logicSupport, surfAl);
 	G4VisAttributes* visAttributesSupport = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0));
 	visAttributesSupport->SetForceWireframe(true);

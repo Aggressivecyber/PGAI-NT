@@ -18,16 +18,22 @@
 SensitiveDetector::SensitiveDetector(const G4String& name,G4int fSDtag) : G4VSensitiveDetector(name),SDtag(fSDtag),fHitsCollection(nullptr),fHCID(-1){
 	collectionName.insert("MyHitsCollection");
 }
-SensitiveDetector::~SensitiveDetector() {}
+SensitiveDetector::~SensitiveDetector()
+{
+	fHCID = -1;
+}
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 	G4cout << "SensitiveDetector::Initialize called, this=" << this << G4endl;
+	auto man =G4SDManager::GetSDMpointer();
 	fHitsCollection = new MyHitsCollection(this->GetName(), collectionName[0]);
 	if (fHCID<0)
+	{if (man->GetCollectionID(fHitsCollection)>0)
 	{
-		fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection);
+		fHCID = man->GetCollectionID(fHitsCollection); hce->AddHitsCollection(fHCID, fHitsCollection);
 	}
-	hce->AddHitsCollection(fHCID, fHitsCollection);
+	}
+
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
@@ -98,20 +104,12 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 		{
 			auto hit = (*fHitsCollection)[i];
 			G4cout << hit << G4endl;
-				G4cout << "EndodEventhit" << G4endl;
-				G4cout <<" SDtag"<< SDtag << G4endl;
 				man->FillNtupleIColumn(0, 0, SDtag);
-				G4cout << "evtID" << evtID << G4endl;
 				man->FillNtupleIColumn(0, 1, evtID);
-				G4cout << "edep" << hit->edep << G4endl;
 				man->FillNtupleDColumn(0, 2, hit->edep);
-				G4cout << "edep" << hit->edep << G4endl;
 				man->FillNtupleDColumn(0, 3, hit->ux);
-				G4cout << "ux" << hit->ux << G4endl;
 				man->FillNtupleDColumn(0, 4, hit->uy);
-				G4cout << "uy" << hit->uy << G4endl;
 				man->FillNtupleDColumn(0, 5, hit->uz);
-				G4cout << "uz" << hit->uz << G4endl;
 				if (hit->particleName=="opticalphoton")
 				{
 					man->FillNtupleIColumn(0, 6, hit->copyNo);
@@ -122,9 +120,7 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 					man->FillNtupleIColumn(0, 6, -1);
 				}
 				man->FillNtupleDColumn(0, 7, hit->globalTime);
-				G4cout << "hit->globalTime" << hit->globalTime << G4endl;
 				man->FillNtupleSColumn(0, 8, hit->particleName);
-				G4cout << "hit->particleName" << hit->particleName << G4endl;
 				man->AddNtupleRow(0);
 			}
 	}
