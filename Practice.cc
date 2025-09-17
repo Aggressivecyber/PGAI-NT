@@ -32,20 +32,19 @@ int main(int argc, char** argv) {
         G4cout << "Executing macro (batch): " << fileName << G4endl;
         uiManager->ApplyCommand("/control/execute " + fileName);
   
-        for (int i = 0; i < 12; ++i) {
+       for (int i = 0; i < 12; ++i) {
             det->setDeg(i * 30.0);
             G4RunManager::GetRunManager()->ReinitializeGeometry();
             runManager->BeamOn(5000);}
-    }
+   }
     else {
         auto visManager = new G4VisExecutive();
         visManager->Initialize();
-     /* for (int i = 0; i <6; ++i) {
+      for (int i = 1; i <6; ++i) {
             det->setDeg(i * 80.0);
             G4RunManager::GetRunManager()->ReinitializeGeometry();
-            runManager->BeamOn(100);
+            runManager->BeamOn(15000);
        }
-       */ 
     	uiManager->ApplyCommand("/control/execute vis.mac");
         ui->SessionStart();
         delete visManager;

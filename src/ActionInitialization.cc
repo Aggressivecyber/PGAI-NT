@@ -9,3 +9,8 @@ void ActionInitialization::Build() const {
 
 
 }
+
+void ActionInitialization::BuildForMaster() const
+{
+	SetUserAction(new RunAction());
+}

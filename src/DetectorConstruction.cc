@@ -141,8 +141,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4VPhysicalVolume* physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
 	logicHPGe = new G4LogicalVolume(HPGe, Ge, "logicHPGe");
 	//CMOS’Û¡–
-	for (G4int i = 0; i < vnum.GetNx(); i++) {
-		for (G4int j = 0; j < vnum.GetNy(); j++) {
+	for (G4int j = 0; j < vnum.GetNx(); j++) {
+		for (G4int i = 0; i < vnum.GetNy(); i++) {
 			G4double xPos = (i - (vnum.GetNx() - 1) / 2.0) * (2 * CMOS_L / vnum.GetNx());
 			G4double yPos = (j - (vnum.GetNy() - 1) / 2.0) * (2 * CMOS_L / vnum.GetNy());
 			new G4PVPlacement(nullptr, G4ThreeVector(0, xPos, yPos), logicVoxel, "Voxel", logicMatrixVoxel, false, i * vnum.GetNy() + j);
