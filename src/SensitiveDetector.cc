@@ -24,15 +24,19 @@ SensitiveDetector::~SensitiveDetector()
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 	G4cout << "SensitiveDetector::Initialize called, this=" << this << G4endl;
-	auto man =G4SDManager::GetSDMpointer();
-	fHitsCollection = new MyHitsCollection(this->GetName(), collectionName[0]);
-	if (fHCID<0)
-	{if (man->GetCollectionID(fHitsCollection)>0)
-	{
-		fHCID = man->GetCollectionID(fHitsCollection); 
-	}
-	}
-	hce->AddHitsCollection(fHCID, fHitsCollection);
+        auto man =G4SDManager::GetSDMpointer();
+        fHitsCollection = new MyHitsCollection(this->GetName(), collectionName[0]);
+        if (fHCID < 0)
+        {
+                const G4String fullName = this->GetName() + "/" + collectionName[0];
+                fHCID = man->GetCollectionID(fullName);
+        }
+        if (fHCID < 0)
+        {
+                G4cout << "无法为 " << this->GetName() << " 获取 HitsCollection ID，跳过本事件的数据记录。" << G4endl;
+                return;
+        }
+        hce->AddHitsCollection(fHCID, fHitsCollection);
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
@@ -82,7 +86,17 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 		return;
 	}
 	G4cout << "EndOfEvent entered, fHitsCollection=" << fHitsCollection << G4endl;
-	auto man = G4AnalysisManager::Instance();
+        if (!RunAction::IsNtupleBooked())
+        {
+                static G4bool warned = false;
+                if (!warned)
+                {
+                        G4cout << "分析管理器的 Ntuple 尚未初始化，忽略当前事件的写入。" << G4endl;
+                        warned = true;
+                }
+                return;
+        }
+        auto man = G4AnalysisManager::Instance();
 	auto evt = G4RunManager::GetRunManager()->GetCurrentEvent();
 	int evtID = evt->GetEventID();
 		if (!fHitsCollection) {
