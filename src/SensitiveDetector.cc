@@ -32,7 +32,7 @@ void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
 	auto track = step->GetTrack();
-	if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary && step->GetTrack()->GetDefinition()->GetParticleName() == "photon")
+	if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary && step->GetTrack()->GetDefinition()->GetParticleName() == "opticalphoton")
 	{
 		track->SetTrackStatus(fStopAndKill);
 	}
@@ -72,7 +72,6 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	hit->ux = local.x();
 	hit->uy = local.y();
 	hit->uz = local.z();
-	G4cout << hit->edep << " keV " << hit->pos << " " << hit->particleName << " " << hit->globalTime << " ns " << hit->copyNo << " " << hit->ux << " " << hit->uy << " " << hit->uz << G4endl;
 	fHitsCollection->insert(hit);
 	return true;
 }
@@ -113,8 +112,15 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 				G4cout << "uy" << hit->uy << G4endl;
 				man->FillNtupleDColumn(0, 5, hit->uz);
 				G4cout << "uz" << hit->uz << G4endl;
-				man->FillNtupleIColumn(0, 6, hit->copyNo);
-				G4cout << "copyNo" << hit->copyNo << G4endl;
+				if (hit->particleName=="opticalphoton")
+				{
+					man->FillNtupleIColumn(0, 6, hit->copyNo);
+					G4cout << "copyNo" << hit->copyNo << G4endl;
+				}
+				else
+				{
+					man->FillNtupleIColumn(0, 6, -1);
+				}
 				man->FillNtupleDColumn(0, 7, hit->globalTime);
 				G4cout << "hit->globalTime" << hit->globalTime << G4endl;
 				man->FillNtupleSColumn(0, 8, hit->particleName);

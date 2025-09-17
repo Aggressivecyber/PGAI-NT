@@ -16,7 +16,6 @@ public:
 	}
 	void setDeg(double);
 	double getDeg();
-
 private:
 	G4LogicalVolume* logicMatrixVoxel = nullptr;
 	G4LogicalVolume* logicHPGe = nullptr;

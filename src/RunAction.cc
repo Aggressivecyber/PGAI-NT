@@ -5,7 +5,6 @@
 
 RunAction::RunAction() {
 	auto man = G4AnalysisManager::Instance();
-	if (man->GetNtuple(0) == nullptr) {
 		man->SetNtupleMerging(true);
 		man->SetVerboseLevel(1);
 		man->SetDefaultFileType("csv");
@@ -20,7 +19,6 @@ RunAction::RunAction() {
 		man->CreateNtupleDColumn("Time_ns");
 		man->CreateNtupleSColumn("pname");
 		man->FinishNtuple();
-	}
 }
 
 RunAction::~RunAction() {

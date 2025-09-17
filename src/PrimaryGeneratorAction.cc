@@ -32,7 +32,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
 
 	// 源面中心放在 -R * dir 处，再加横向偏移 dy*n1 + dz*n2
 	const G4ThreeVector center = -R * dir;
-	const G4ThreeVector pos = center + dy * n1*0 + dz * n2;
+	const G4ThreeVector pos = center + dy * n1 + dz * n2*0;
 
 	// 设置粒子
 	fParticleGun->SetParticlePosition(pos);

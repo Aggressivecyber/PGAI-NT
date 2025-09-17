@@ -17,12 +17,21 @@
 #include "G4String.hh"
 #include "SensitiveDetector.hh"
 #include "G4SDManager.hh"
-#include <cmath>
+#include "G4StepLimiter.hh"
+#include "G4LogicalBorderSurface.hh"
+#include "G4LogicalSkinSurface.hh"
+#include  "G4OpticalPhoton.hh"
+#include  "G4MaterialPropertiesTable.hh"
 #include "G4Exception.hh"
-
+#include  "G4SubtractionSolid.hh"
+#include "G4OpticalSurface.hh"
+#include "G4Trd.hh"
+#include "G4PhysicalVolumeStore.hh"
+#include  <memory>
 G4VPhysicalVolume* DetectorConstruction::Construct() {
 	//材料定义
 	G4NistManager* nist = G4NistManager::Instance();
+	G4Material* PMMA = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
 	G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
 	G4Material* Pb = nist->FindOrBuildMaterial("G4_Pb");
 	G4Material* Fe = nist->FindOrBuildMaterial("G4_Fe");
@@ -41,6 +50,17 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 		energy.push_back(eVal);
 		spectrum.push_back(1.0);
 	}
+	std::vector<G4double> ref1(nPoints,0.92);
+
+	auto almpt = new G4MaterialPropertiesTable();
+	almpt->AddProperty("RINDEX", energy, std::vector<G4double>(nPoints, 0.85));
+	auto surfAl = new G4OpticalSurface("surfAl");
+	surfAl->SetType(dielectric_metal);
+	surfAl->SetFinish(polished);
+	surfAl->SetModel(unified);
+	almpt->AddProperty("REFLECTIVITY", energy, ref1);
+	surfAl->SetMaterialPropertiesTable(almpt);
+
 	auto siMpt = new G4MaterialPropertiesTable();
 	siMpt->AddProperty("RINDEX", energy, std::vector<G4double>(nPoints, 3.5));
 	Si->SetMaterialPropertiesTable(siMpt);
@@ -70,12 +90,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	ImageLayer->AddMaterial(LiF, 0.323);
 	ImageLayer->AddMaterial(ZnS_Ag, 0.647);
 	ImageLayer->AddMaterial(PE, 0.03); //Eljen Technology – EJ-426 Specification Sheet
-	std::vector<G4double> rindex(nPoints, 1.);
+	std::vector<G4double> rindex(nPoints, 2.36);
 	std::vector<G4double> absLength(nPoints, 40 * CLHEP::cm);
 	G4double FastTimeConst = 200. * ns;
 	G4double SlowTimeConst = 2000. * ns;
 	G4double YieldRatio = 0.6;
-	G4double ScintYield = 60000.*(0.01)/ MeV;
+	G4double ScintYield = 60000.*(0.5)/ MeV;
 	auto mpt = new G4MaterialPropertiesTable();
 	mpt->AddProperty("RINDEX", energy, rindex);
 	mpt->AddProperty("ABSLENGTH", energy, absLength);
@@ -94,52 +114,58 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4double HPGe_H = 60 * mm;
 	G4double HPGe_R = 20 * mm;
 	G4double Screen_L = 20 * mm;
-	G4double Screen_H = 1 * mm;
-	G4double film_Scintillator_T = 1* mm;
+	G4double Screen_H = 3 * mm;
+	G4double CMOS_L = 18 * mm;
+	G4double film_Scintillator_T = 1 * mm;
 	G4double Tubs_H = 30 / 2 * mm;
 	G4double Tubs_R = 2.9 * mm;
 	G4double worldSize = 1 * m;
 	G4double Voxel_H = 1 * mm;
 	G4Box* solidWorld = new G4Box("World", worldSize, worldSize, worldSize);
 	G4Tubs* HPGe = new G4Tubs("HPGe", 0, HPGe_R, HPGe_H, 0, 2 * CLHEP::pi);
-	//auto soildScreen = new G4Box("soildScreen",Screen_H,Screen_L, Screen_L);
+	auto soildScreen = new G4Box("soildScreen", Screen_H,Screen_L+5*mm, Screen_L+5 * mm);
+	G4ThreeVector holePos(0, 0, 0);
 	auto soildScintillator = new G4Box("soildScintillator", film_Scintillator_T, Screen_L, Screen_L);
-	auto soildTubs_Pb = new G4Tubs("soildTubs_Pb", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Al = new G4Tubs("soildTubs_Al", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Cu = new G4Tubs("soildTubs_Cu", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Fe = new G4Tubs("soildTubs_Fe", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
+	auto soildTubs_Pb = new G4Tubs("soildTubs_Pb", 0, Tubs_R, Tubs_H-0.2*mm, 0, 2 * CLHEP::pi);
+	auto soildTubs_Al = new G4Tubs("soildTubs_Al", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
+	auto soildTubs_Cu = new G4Tubs("soildTubs_Cu", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
+	auto soildTubs_Fe = new G4Tubs("soildTubs_Fe", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
+	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
+	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
 	voxelNum vnum;
-	vnum.setNumX(128);
-	vnum.setNumY(128);
-	auto soildVoxel = new G4Box("soildVoxel", Voxel_H, (Screen_L * 0.98) / vnum.GetNx(), (Screen_L * 0.98) / vnum.GetNy());
-	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H, Screen_L, Screen_L);
+	vnum.setNumX(10);
+	vnum.setNumY(10);
+	auto soildScintillator1 = new G4Box("soildScintillator1", Screen_H +0.8*mm, Screen_L+0.8*mm, Screen_L+0.8 * mm);
+	auto soildVoxel = new G4Box("soildVoxel", Voxel_H/2, CMOS_L  / vnum.GetNx(), CMOS_L  / vnum.GetNy());
+	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H/2, CMOS_L, CMOS_L);
+	auto soildSupport = new G4SubtractionSolid("Support", soildScreen, soildScintillator1);
 	logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
 	logicMatrixVoxel = new G4LogicalVolume(soildMatrixVoxel, Galactic, "logicMatrixVoxel");
+	auto logicSupport = new G4LogicalVolume(soildSupport, Al, "logicSupport");
 	G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, Galactic, "World");
 	G4VPhysicalVolume* physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
 	logicHPGe = new G4LogicalVolume(HPGe, Ge, "logicHPGe");
 	//CMOS阵列
 	for (G4int i = 0; i < vnum.GetNx(); i++) {
 		for (G4int j = 0; j < vnum.GetNy(); j++) {
-			G4double xPos = (i - (vnum.GetNx() - 1) / 2.0) * (2 * Screen_L / vnum.GetNx());
-			G4double yPos = (j - (vnum.GetNy() - 1) / 2.0) * (2 * Screen_L / vnum.GetNy());
+			G4double xPos = (i - (vnum.GetNx() - 1) / 2.0) * (2 * CMOS_L / vnum.GetNx());
+			G4double yPos = (j - (vnum.GetNy() - 1) / 2.0) * (2 * CMOS_L / vnum.GetNy());
 			new G4PVPlacement(nullptr, G4ThreeVector(0, xPos, yPos), logicVoxel, "Voxel", logicMatrixVoxel, false, i * vnum.GetNy() + j);
 		}
 	}
 	auto pRot1 = new G4RotationMatrix();
 	pRot1->rotateZ(-getDeg() * CLHEP::deg);
-	G4VPhysicalVolume* physMatrixVoxel = new G4PVPlacement(pRot1, G4ThreeVector((40 + Voxel_H) * std::cos(getDeg() * CLHEP::pi / 180), (40 + Voxel_H) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicMatrixVoxel, "MatrixVoxel", logicWorld, false, 0);
+	G4VPhysicalVolume* physMatrixVoxel = new G4PVPlacement(pRot1, G4ThreeVector((60 + Voxel_H/2+film_Scintillator_T/2) * std::cos(getDeg() * CLHEP::pi / 180), (60 + Voxel_H/2+film_Scintillator_T/2) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicMatrixVoxel, "MatrixVoxel", logicWorld, false, 0,1);
+
 	G4VisAttributes* visAttributesVoxel = new G4VisAttributes(G4Colour(0.8, 0.8, 0.8));
+
 	visAttributesVoxel->SetForceSolid(true);
 	logicVoxel->SetVisAttributes(visAttributesVoxel);
 	logicMatrixVoxel->SetVisAttributes(G4VisAttributes::GetInvisible());
-	auto solidcollimator = new G4Tubs("collimator", 2 * mm, 4 * mm, 20 * mm, 0, 2 * CLHEP::pi);
 	auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
 	test->SetScale(1.);
 	test->SetOffset(-15, -15, -15);
-	//auto logicalScreen = new G4LogicalVolume(soildScreen, Al, "logicalScreen");
+	auto logicalScreen = new G4LogicalVolume(soildScreen, Al, "logicalScreen");
 	//测试材料
 	auto logicalScintillator = new G4LogicalVolume(soildScintillator, ImageLayer, "logicalScintillator");
 	auto logicalTubs_Pb = new G4LogicalVolume(soildTubs_Pb, Pb, "logicalTubs_Pb");
@@ -148,22 +174,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto logicalTubs_Fe = new G4LogicalVolume(soildTubs_Fe, Fe, "logicalTubs_Fe");
 	auto logicalTubs_PE = new G4LogicalVolume(soildTubs_PE, PE, "logicalTubs_PE");
 	auto logicalTubs_Ni = new G4LogicalVolume(soildTubs_Ni, Ni, "logicalTubs_Ni");
-	new G4PVPlacement(pRot1, G4ThreeVector(((-film_Scintillator_T / 2) + (40)) * std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40)) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicalScintillator, "Scintillator", logicWorld, 1, 0);
+	auto phyScint= new G4PVPlacement(pRot1, G4ThreeVector(((-film_Scintillator_T / 2) + (40)) * std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40)) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicalScintillator, "Scintillator", logicWorld, false, 0,1);
 	auto logicaltest = new G4LogicalVolume(test->GetSolid(), Al, "logical");
-	auto logicalcollimator = new G4LogicalVolume(solidcollimator, Pb, "logicalcollimator");
+
 	new G4PVPlacement(0, G4ThreeVector(), logicaltest, "test", logicWorld, false, 0);
 	auto pRot2 = new G4RotationMatrix();
 	pRot2->rotateZ(-getDeg() * CLHEP::deg);
 	pRot2->rotateX(90 * CLHEP::deg);
 	G4VPhysicalVolume* physHPGe = new G4PVPlacement(pRot2, G4ThreeVector(250 * std::sin(-getDeg() * CLHEP::pi / 180), 250 * std::cos(-getDeg() * CLHEP::pi / 180), 0), logicHPGe, "HPGe", logicWorld, false, 0);
-	new G4PVPlacement(nullptr, G4ThreeVector(0, 0, -HPGe_H), logicalcollimator, "collimator", logicHPGe, false, 0);
 	//可视化属性设置
 	G4VisAttributes* visAttributesCollimator = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	G4VisAttributes* visAttributesHPGe = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	visAttributesCollimator->SetForceWireframe(true);
 	visAttributesHPGe->SetForceSolid(true);
 	logicHPGe->SetVisAttributes(visAttributesHPGe);
-	logicalcollimator->SetVisAttributes(visAttributesCollimator);
 	std::vector<G4LogicalVolume*> logicalTubs;
 	logicalTubs.push_back(logicalTubs_Pb);
 	logicalTubs.push_back(logicalTubs_Al);
@@ -210,6 +234,47 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	logicalScintillator->SetUserLimits(userLimits2);
 	G4VisAttributes* visAttributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	logicWorld->SetVisAttributes(visAttributes);
+	new G4PVPlacement(pRot1, G4ThreeVector((-film_Scintillator_T / 2) + (40) * std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40))* std::sin(getDeg() * CLHEP::pi / 180),0) ,logicSupport, "Support", logicWorld, false, 0,1);
+	new G4LogicalSkinSurface("SurfaceSupport", logicSupport, surfAl);
+	G4VisAttributes* visAttributesSupport = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0));
+	visAttributesSupport->SetForceWireframe(true);
+	logicSupport->SetVisAttributes(visAttributesSupport);
+	G4double PMMA_H = 10 * mm;
+	auto solidPMMA = new G4Trd("PMMA", CMOS_L, Screen_L, CMOS_L, Screen_L, PMMA_H);
+	auto logicPMMA = new G4LogicalVolume(solidPMMA, PMMA, "logicPMMA");
+	auto pRot3 = new G4RotationMatrix();
+	pRot3->rotateZ(-getDeg() * CLHEP::deg);
+	pRot3->rotateY(90* CLHEP::deg);
+	auto phyPMMA= new G4PVPlacement(pRot3, G4ThreeVector((50+ film_Scintillator_T/2) * std::cos(getDeg() * CLHEP::pi / 180), (50 + film_Scintillator_T / 2) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicPMMA, "PMMA", logicWorld, false , 0,1);
+	G4VisAttributes* visAttributesPMMA = new G4VisAttributes(G4Colour(0.8, 0.2, 0.0,0.4));
+	visAttributesPMMA->SetForceSolid(1);
+	logicPMMA->SetVisAttributes(visAttributesPMMA);
+	auto pmmaMpt = new G4MaterialPropertiesTable();
+	pmmaMpt->AddProperty("RINDEX", energy, std::vector<G4double>(nPoints, 1.49));
+	pmmaMpt->AddProperty("ABSLENGTH", energy, std::vector<G4double>(nPoints, 1 * m));
+	PMMA->SetMaterialPropertiesTable(pmmaMpt);
+	auto surfpmma = new G4OpticalSurface("surfpmma");
+	surfpmma->SetType(dielectric_metal);
+	surfpmma->SetFinish(groundfrontpainted);
+	surfpmma->SetModel(unified);
+	auto mptSide = new G4MaterialPropertiesTable();
+	mptSide->AddProperty("REFLECTIVITY", energy, std::vector<G4double>(nPoints, 0.03));
+	surfpmma->SetMaterialPropertiesTable(mptSide);
+	new G4LogicalSkinSurface("SurfacePMMA", logicPMMA, surfpmma);
+	auto surfIdeal = new G4OpticalSurface("Scint_PMMA_Ideal");
+	surfIdeal->SetType(dielectric_dielectric);
+	surfIdeal->SetModel(unified);
+	surfIdeal->SetFinish(polished);
+	auto mptIdeal = new G4MaterialPropertiesTable();
+	std::vector<G4double> R0(nPoints, 1.);
+	mptIdeal->AddProperty("REFLECTIVITY", energy, R0);
+	surfIdeal->SetMaterialPropertiesTable(mptIdeal);
+	new G4LogicalBorderSurface("pmmaToScint", phyPMMA, phyScint, surfIdeal);
+	new G4LogicalBorderSurface("scintToPMMA", phyScint, phyPMMA, surfIdeal);
+	new G4LogicalBorderSurface("PMMA_to_Martrix", phyPMMA, physMatrixVoxel, surfIdeal);
+	new G4LogicalBorderSurface("Martrix_to_PMMA", physMatrixVoxel, phyPMMA, surfIdeal);
+	for (auto* pv : *G4PhysicalVolumeStore::GetInstance())
+		pv->CheckOverlaps(1000, 0., true);
 	return physWorld;
 }
 
