@@ -27,7 +27,7 @@ G4ThreeVector PrimaryGeneratorAction::RadialDir(G4double phi) const
 {
 	return G4ThreeVector(-std::cos(phi), -std::sin(phi), 0.);
 }
-
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
 
 G4ThreeVector PrimaryGeneratorAction::SamplePosOnRing(G4double phi) const {
     const G4double fRlth = 2*(fRlength) *( 0.5-G4UniformRand());

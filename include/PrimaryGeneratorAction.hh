@@ -40,4 +40,5 @@ private:
 	G4ThreeVector RadialDir(G4double phi) const;
 	G4ThreeVector SamplePosOnRing(G4double phi) const;
 };
+
 #endif
