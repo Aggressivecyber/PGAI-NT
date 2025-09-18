@@ -1,43 +1,45 @@
-#include "PrimaryGeneratorAction.hh"
+ï»¿#include "PrimaryGeneratorAction.hh"
+#include "G4RunManager.hh"
+#include "G4Neutron.hh"
 #include "G4ParticleGun.hh"
-#include "G4ParticleTable.hh"
-#include "G4UniformRandPool.hh"
 #include "G4SystemOfUnits.hh"
+#include "Randomize.hh"
+#include <cmath>
+#include "PrimaryGeneratorMessenger.hh"
 
-PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* fdec):temp_dec(fdec){
-	fParticleGun = new G4ParticleGun(1); 
-	auto table = G4ParticleTable::GetParticleTable();
-	fParticleGun->SetParticleDefinition(table->FindParticle("neutron"));
-	
+PrimaryGeneratorAction::PrimaryGeneratorAction() {
+    fParticlegun = new G4ParticleGun(1);
+    fParticlegun->SetParticleDefinition(G4Neutron::Definition());
+    fParticlegun->SetParticleEnergy(fEk);
+    fMessenger = new PrimaryGeneratorMessenger(this);
 }
-PrimaryGeneratorAction::~PrimaryGeneratorAction() {
-	delete fParticleGun; // Clean up the particle gun
 
+PrimaryGeneratorAction::~PrimaryGeneratorAction() { 
+    delete fParticlegun;  
+    delete fMessenger;
 }
-void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
 
-	// ½Ç¶È/·½Ïò
-	const G4double theta = temp_dec->getDeg() * CLHEP::pi / 180.0;
-	const G4ThreeVector dir(std::cos(theta), std::sin(theta), 0.0);         // ÊøÁ÷·½Ïò
-	const G4ThreeVector n1(-std::sin(theta), std::cos(theta), 0.0);         // XY ÃæÄÚ¡¢Óë dir ´¹Ö±
-	const G4ThreeVector n2(0.0, 0.0, 1.0);                                   // Z ·½Ïò
 
-	// Ô´Ãæ³ß´çÓë¾àÀë
-	const G4double Screen_L = 70.0 * mm;                                     // Ô´Ãæ·½ÐÎ°ë±ß³¤=Screen_L/2
-	const G4double R = 800.0 * mm;                                           // Ô´µ½Ô­µãµÄ¾àÀë£¨ÑØ -dir£©
+G4double PrimaryGeneratorAction::CurrentPhiCenter() const {
+    return fPhiCenter; 
+}
+G4ThreeVector PrimaryGeneratorAction::RadialDir(G4double phi) const
+{
+	return G4ThreeVector(-std::cos(phi), -std::sin(phi), 0.);
+}
 
-	// ÔÚÓë dir ´¹Ö±µÄÆ½ÃæÄÚ×ö¾ùÔÈËæ»ú£¨·½ÐÎ·Ö²¼£©
-	const G4double dy = (G4UniformRand() - 0.5) * Screen_L;                  // [-L/2, L/2]
-	const G4double dz = (G4UniformRand() - 0.5) * Screen_L;                  // [-L/2, L/2]
 
-	// Ô´ÃæÖÐÐÄ·ÅÔÚ -R * dir ´¦£¬ÔÙ¼ÓºáÏòÆ«ÒÆ dy*n1 + dz*n2
-	const G4ThreeVector center = -R * dir;
-	const G4ThreeVector pos = center + dy * n1 + dz * n2*0;
+G4ThreeVector PrimaryGeneratorAction::SamplePosOnRing(G4double phi) const {
+    const G4double fRlth = 2*(fRlength) *( 0.5-G4UniformRand());
+    return { fRsrc * std::cos(phi)+ fRlth *std::sin(-phi), fRsrc * std::sin(phi)+ fRlth * std::cos(-phi), 0};
+}
 
-	// ÉèÖÃÁ£×Ó
-	fParticleGun->SetParticlePosition(pos);
-	fParticleGun->SetParticleMomentumDirection(dir);
-	fParticleGun->SetParticleEnergy(4.05 * CLHEP::MeV);
-	fParticleGun->GeneratePrimaryVertex(event);
-
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* evt) {
+        fParticlegun->SetParticleEnergy(fEk);
+        const G4double phi = CurrentPhiCenter();
+        const auto dir = RadialDir(phi);
+        const auto pos = SamplePosOnRing(phi);
+        fParticlegun->SetParticleMomentumDirection(dir);
+        fParticlegun->SetParticlePosition(pos);
+        fParticlegun->GeneratePrimaryVertex(evt);
 }

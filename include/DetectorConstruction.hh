@@ -9,20 +9,25 @@
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
 	virtual G4VPhysicalVolume* Construct() override;
-	G4LogicalVolume* logicVoxel = nullptr;
-	inline G4LogicalVolume* getMatrix() const
-	{
-		return logicMatrixVoxel;
-	}
-	void setDeg(double);
-	double getDeg();
+
+	DetectorConstruction() ;
+
+
+
+	void setDeg(double) ;
+
+	double getDeg() const;
+
+	
+
 private:
-	G4LogicalVolume* logicMatrixVoxel = nullptr;
+
+	void DefinitionMatertial();
+	G4LogicalVolume* logicPixel = nullptr;
 	G4LogicalVolume* logicHPGe = nullptr;
 	G4bool  fCheckOverlaps = false;
 	void ConstructSDandField() override;
 	G4UserLimits* fStepLimit = nullptr;
-	G4double deg{ 0.};
 	G4VSensitiveDetector* HPGEsd = nullptr;
 	G4VSensitiveDetector* CMOSsd = nullptr;
 };

@@ -11,12 +11,13 @@
 
 class SensitiveDetector : public G4VSensitiveDetector {
 public:
-	explicit SensitiveDetector(const G4String& name, G4int fSDtag);
+	explicit SensitiveDetector(const G4String& name, G4String nfcollectionName);
 	~SensitiveDetector() override;
 	G4bool ProcessHits(G4Step* step, G4TouchableHistory* history) override;
 	void Initialize(G4HCofThisEvent*) override;
 	void EndOfEvent(G4HCofThisEvent*) override;
 private:
+	G4String fcollectionName;
 	MyHitsCollection* fHitsCollection;
 	G4int fHCID{};
 	G4int SDtag{};

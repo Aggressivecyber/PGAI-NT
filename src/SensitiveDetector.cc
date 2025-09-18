@@ -15,27 +15,21 @@
 
 
 
-SensitiveDetector::SensitiveDetector(const G4String& name,G4int fSDtag) : G4VSensitiveDetector(name),SDtag(fSDtag),fHitsCollection(nullptr),fHCID(-1){
-	collectionName.insert("MyHitsCollection");
+SensitiveDetector::SensitiveDetector(const G4String& name,G4String nfcollectionName) : G4VSensitiveDetector(name), fcollectionName(nfcollectionName),fHitsCollection(nullptr),fHCID(-1){
+	collectionName.insert(fcollectionName);
 }
 SensitiveDetector::~SensitiveDetector()
 {
 }
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
-	auto man =G4SDManager::GetSDMpointer();
-	fHitsCollection = new MyHitsCollection(this->GetName(), collectionName[0]);
+	fHitsCollection = new MyHitsCollection(SensitiveDetectorName, collectionName[0]);
 	if (fHCID<0)
 	{
-		fHCID = man->GetCollectionID(collectionName[0]);
-		if (fHCID < 0)
-		{
-			G4Exception("SensitiveDetector::Initialize", "SD001", JustWarning,
-				"Failed to obtain collection ID for hits collection");
-			return;
-		}
+		fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
+		if (fHCID!=-1)
+		{	hce->AddHitsCollection(fHCID, fHitsCollection);}
 	}
-	hce->AddHitsCollection(fHCID, fHitsCollection);
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {
@@ -59,22 +53,18 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	}
 
 	auto hit = new myHit();
-	hit->edep = step->GetTotalEnergyDeposit() / keV;
-	hit->pos = preStep->GetPosition();
-	hit->particleName = track->GetParticleDefinition()->GetParticleName();
-	hit->globalTime = preStep->GetGlobalTime();
+	hit->Setedep(step->GetTotalEnergyDeposit() / keV);
+	hit->Setpos(preStep->GetPosition());
+	hit->SetParticleName(track->GetParticleDefinition()->GetParticleName());
+	hit->SetTime(preStep->GetGlobalTime());
 
 	G4int nem_copyNo = -1;
 	if (const auto* volume = touchable->GetVolume())
 	{
 		nem_copyNo = volume->GetCopyNo();
 	}
-	hit->copyNo = nem_copyNo;
+	hit->SetCopyNo( nem_copyNo);
 
-	G4ThreeVector local = history1->GetTopTransform().TransformPoint(hit->pos);
-	hit->ux = local.x();
-	hit->uy = local.y();
-	hit->uz = local.z();
 	fHitsCollection->insert(hit);
 	return true;
 }
@@ -101,24 +91,22 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 		{
 			auto hit = (*fHitsCollection)[i];
 			G4cout << hit << G4endl;
-				man->FillNtupleIColumn(0, 0, SDtag);
+				man->FillNtupleSColumn(0, 0, fcollectionName);
 				man->FillNtupleIColumn(0, 1, evtID);
-				man->FillNtupleDColumn(0, 2, hit->edep);
-				man->FillNtupleDColumn(0, 3, hit->ux);
-				man->FillNtupleDColumn(0, 4, hit->uy);
-				man->FillNtupleDColumn(0, 5, hit->uz);
-				if (hit->particleName=="opticalphoton")
+				man->FillNtupleDColumn(0, 2, hit->Getedep());
+				if (hit->GetParticlename()=="opticalphoton")
 				{
-					man->FillNtupleIColumn(0, 6, hit->copyNo);
-					G4cout << "copyNo" << hit->copyNo << G4endl;
+					man->FillNtupleIColumn(0, 6, hit->GetcopyNo());
+					G4cout << "copyNo" << hit->GetcopyNo() << G4endl;
 				}
 				else
 				{
 					man->FillNtupleIColumn(0, 6, -1);
 				}
-				man->FillNtupleDColumn(0, 7, hit->globalTime);
-				man->FillNtupleSColumn(0, 8, hit->particleName);
+				man->FillNtupleDColumn(0, 7, hit->GetGlobalTime());
+				man->FillNtupleSColumn(0, 8, hit->GetParticlename());
 				man->AddNtupleRow(0);
 			}
+			fHitsCollection = nullptr;
 	}
 

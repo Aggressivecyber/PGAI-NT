@@ -3,21 +3,41 @@
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
 #include "DetectorConstruction.hh"
-
-class G4Event;
-class G4ParticleGun;
+#include "G4ThreeVector.hh"
+#include "globals.hh"
+class PrimaryGeneratorMessenger;
 
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 public:
-	PrimaryGeneratorAction(DetectorConstruction*);
+	PrimaryGeneratorAction();
 	~PrimaryGeneratorAction() override;
-	void GeneratePrimaries(G4Event* event) override;
-	void SetParticleGun(G4ParticleGun* gun);
-	G4ParticleGun* GetParticleGun() const;
-	DetectorConstruction* temp_dec;
+
+	void GeneratePrimaries(G4Event* evt) override;
+
+	G4double GetPhi0() { return fPhi0; }
+	G4double GetDphi() { return fDphi; }
+
+	void SetRadius(G4double r) { fRsrc = r; }
+	void SetNPerEvent(G4int n) { fNperEvt = n; }
+	void SetPhi0(G4double v) { fPhi0 = v; }
+	void SetDphi(G4double v) { fDphi = v; }
+	void SetPhiCenter(G4double v) { fPhiCenter = v; }
+
 private:
+	G4double fRsrc = 20. * CLHEP::mm;  
+	G4int    fNperEvt = 1;            
+	G4double fPhiCenter = 20. * CLHEP::deg; 
+	G4double fRlength = 20*CLHEP::mm; 
 
-	G4ParticleGun* fParticleGun; // Particle gun for generating primary particles
+
+	G4ParticleGun* fParticlegun = nullptr;
+	G4double fEk = 4.05 * CLHEP::MeV;
+	G4double fPhi0 = 0. * CLHEP::deg;
+	G4double fDphi = 5. * CLHEP::deg;
+	PrimaryGeneratorMessenger* fMessenger = nullptr;
+
+	G4double CurrentPhiCenter() const;
+	G4ThreeVector RadialDir(G4double phi) const;
+	G4ThreeVector SamplePosOnRing(G4double phi) const;
 };
-
 #endif

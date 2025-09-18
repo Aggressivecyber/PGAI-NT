@@ -3,12 +3,24 @@
 #include "G4AnalysisManager.hh"
 #include <atomic>
 
-RunAction::RunAction() {
+RunAction::RunAction(PrimaryGeneratorAction* pga) : fPGA(pga) {
+
+}
+
+RunAction::~RunAction() {
+}
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
+	G4int runID = aRun->GetRunID();
+	G4double phi = fPGA->GetPhi0() + runID * fPGA->GetDphi();
+	fPGA->SetPhiCenter(phi);
+
+	G4cout << ">>> Run " << runID
+		<< " source angle = " << phi / CLHEP::deg << " deg" << G4endl;
 	auto man = G4AnalysisManager::Instance();
 	man->SetVerboseLevel(1);
 	man->SetDefaultFileType("csv");
 	man->CreateNtuple("hits", "SD hits table");
-	man->CreateNtupleIColumn("sd");
+	man->CreateNtupleSColumn("sdhc");
 	man->CreateNtupleIColumn("event");
 	man->CreateNtupleDColumn("edep_keV");
 	man->CreateNtupleDColumn("pos_X_mm");
@@ -19,12 +31,6 @@ RunAction::RunAction() {
 	man->CreateNtupleSColumn("pname");
 	man->FinishNtuple();
 	man->SetVerboseLevel(1);
-}
-
-RunAction::~RunAction() {
-}
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
-	auto man = G4AnalysisManager::Instance();
 	static std::atomic<int> runCounter{ 0 };
 	G4int currentRunNumber = runCounter.load();
 		currentRunNumber = runCounter.fetch_add(1) + 1;

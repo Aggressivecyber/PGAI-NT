@@ -4,13 +4,15 @@
 
 
 void ActionInitialization::Build() const {
-	SetUserAction(new RunAction());
-	SetUserAction(new PrimaryGeneratorAction(fDet));
+	auto pri_worker = new PrimaryGeneratorAction();
+	SetUserAction(new RunAction(pri_worker));
+	SetUserAction(pri_worker);
 
 
 }
 
 void ActionInitialization::BuildForMaster() const
 {
-	SetUserAction(new RunAction());
+	auto pri_master = new PrimaryGeneratorAction();
+	SetUserAction(new RunAction(pri_master));
 }

@@ -6,12 +6,10 @@
 
 class ActionInitialization : public G4VUserActionInitialization {
 public:
-	inline ActionInitialization(DetectorConstruction* det) : fDet(det) {}
+	inline ActionInitialization() {}
 	~ActionInitialization() override = default;
 	void Build() const override;
 	void BuildForMaster() const override;
-private:
-	DetectorConstruction* fDet;
 };
 
 #endif
