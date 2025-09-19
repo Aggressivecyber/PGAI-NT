@@ -1,0 +1,21 @@
+#class tools::wcsv::ntuple
+#title SD hits table
+#separator 44
+#vector_separator 59
+#column string sdhc
+#column int event
+#column double edep_keV
+#column double pos_X_mm
+#column double pos_Y_mm
+#column double pos_Z_mm
+#column int copyNum
+#column double Time_ns
+#column string pname
+CMOSHitCollection,0,0,0,0,0,-1,5.04627,neutron
+CMOSHitCollection,4,0,0,0,0,-1,5.16061,neutron
+CMOSHitCollection,6,0,0,0,0,-1,5.18902,neutron
+CMOSHitCollection,6,0,0,0,0,-1,5.28289,neutron
+CMOSHitCollection,6,32.0936,0,0,0,-1,5.28289,Si28
+CMOSHitCollection,6,0,0,0,0,-1,5.28295,Si28
+CMOSHitCollection,9,0,0,0,0,-1,5.08999,neutron
+CMOSHitCollection,9,0,0,0,0,-1,5.18722,neutron

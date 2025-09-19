@@ -4,18 +4,6 @@
 #include <atomic>
 
 RunAction::RunAction(PrimaryGeneratorAction* pga) : fPGA(pga) {
-
-}
-
-RunAction::~RunAction() {
-}
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
-	G4int runID = aRun->GetRunID();
-	G4double phi = fPGA->GetPhi0() + runID * fPGA->GetDphi();
-	fPGA->SetPhiCenter(phi);
-
-	G4cout << ">>> Run " << runID
-		<< " source angle = " << phi / CLHEP::deg << " deg" << G4endl;
 	auto man = G4AnalysisManager::Instance();
 	man->SetVerboseLevel(1);
 	man->SetDefaultFileType("csv");
@@ -31,11 +19,16 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 	man->CreateNtupleSColumn("pname");
 	man->FinishNtuple();
 	man->SetVerboseLevel(1);
-	static std::atomic<int> runCounter{ 0 };
-	G4int currentRunNumber = runCounter.load();
-		currentRunNumber = runCounter.fetch_add(1) + 1;
-	G4cout << "Run Start" << G4endl;
-	man->SetFileName("hits" + std::to_string(currentRunNumber));
+}
+
+RunAction::~RunAction() {
+}
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
+	auto man = G4AnalysisManager::Instance();
+	G4int runID = aRun->GetRunID();
+	G4double phi = fPGA->GetPhi0() + runID * fPGA->GetDphi();
+	fPGA->SetPhiCenter(phi);
+	man->SetFileName("hits" + std::to_string(runID));
 	man->OpenFile();
 
 }

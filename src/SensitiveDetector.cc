@@ -24,12 +24,8 @@ SensitiveDetector::~SensitiveDetector()
 
 void SensitiveDetector::Initialize(G4HCofThisEvent* hce) {
 	fHitsCollection = new MyHitsCollection(SensitiveDetectorName, collectionName[0]);
-	if (fHCID<0)
-	{
 		fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
-		if (fHCID!=-1)
-		{	hce->AddHitsCollection(fHCID, fHitsCollection);}
-	}
+		hce->AddHitsCollection(fHCID, fHitsCollection);
 }
 
 G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history) {

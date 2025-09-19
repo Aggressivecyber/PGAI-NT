@@ -2,7 +2,7 @@
 
 void MyPhysicsList::SetCuts()
 {
-	SetDefaultCutValue(1 * CLHEP::mm);
+	SetDefaultCutValue(100 * CLHEP::um);
 
 	DumpCutValuesTable();
 }

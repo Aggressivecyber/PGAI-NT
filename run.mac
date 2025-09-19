@@ -1,2 +1,6 @@
 
 /control/verbose 1
+/src/phi0  0 deg
+/src/dphi  3 deg
+/run/initialize
+/run/beamOn 100000

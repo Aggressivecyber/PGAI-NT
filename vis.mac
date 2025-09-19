@@ -1,10 +1,9 @@
-/src/phi0  20 deg
-/src/dphi  12 deg
+/src/phi0  0 deg
+/src/dphi  60 deg
 /run/initialize
 /vis/open OGL 
 /vis/drawVolume
 /vis/scene/add/trajectories smooth
-/vis/scene/add/axes
 /vis/scene/endOfEventAction accumulate
 /vis/modeling/trajectories/create/drawByParticleID
 /vis/scene/add/hits

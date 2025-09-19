@@ -174,12 +174,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 	const G4double R = 120. * mm ;
 	const G4double pix_t = 1*mm;           
-	const G4int    Nang = 10;               
-	const G4int    Nz = 10;                 
-	const G4double cellZ = (60./Nz) * mm;           
+	const G4int    Nang = 512;               
+	const G4int    Nz = 32;                 
+	const G4double cellZ = (40./Nz) * mm;           
 	const G4double gapT = 0.05 * mm;          
 	const G4double gapZ = 0.02 * mm;            
-	const G4bool   checkOL = true;
+	const G4bool   checkOL = 0;
 
 
 	const G4double Htot = Nz * cellZ + (Nz - 1) * gapZ;        
@@ -305,11 +305,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	const G4double r_out_g = Rin_carrier - 0.02 * mm;
 
 	const G4double t_radial = r_out_g - r_in_g;
-	if (t_radial <= 0.) {
-		G4Exception("DetectorConstruction", "GuideBand<=0", FatalException,
-			"导光分隔带径向空间不足，请调整几何。");
-	}
-
 	auto solidWallHost = new G4Tubs("WallHost", r_in_g, r_out_g, 0.5 * Htot, 0., 2. * CLHEP::pi);
 	auto logicWallHost = new G4LogicalVolume(solidWallHost, Vac, "WallHostLV");
 	new G4PVPlacement(nullptr, {}, logicWallHost, "WallHost", logicWorld, false, 0, true);
@@ -359,7 +354,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 
 	//测试材料
-	auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
+auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
 	test->SetScale(1.);
 	test->SetOffset(-15, -15, -15);
 	auto logicaltest = new G4LogicalVolume(test->GetSolid(), Al, "logical");
@@ -418,7 +413,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 	G4VisAttributes* vis1Attributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	logicaltest->SetVisAttributes(vis1Attributes);
-
 	G4UserLimits* userLimits1 = new G4UserLimits(1 * CLHEP::mm);
 	logicWorld->SetUserLimits(userLimits1);
 
