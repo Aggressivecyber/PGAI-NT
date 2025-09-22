@@ -24,18 +24,19 @@ RunAction::RunAction(PrimaryGeneratorAction* pga) : fPGA(pga) {
 RunAction::~RunAction() {
 }
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
+	G4cout << "Run Start" << aRun->GetRunID() << G4endl;
 	auto man = G4AnalysisManager::Instance();
 	G4int runID = aRun->GetRunID();
 	G4double phi = fPGA->GetPhi0() + runID * fPGA->GetDphi();
 	fPGA->SetPhiCenter(phi);
-	man->SetFileName("hits" + std::to_string(runID));
+	man->SetFileName("hits" +to_string(runID));
 	man->OpenFile();
 
 }
 	
 
 void RunAction::EndOfRunAction(const G4Run* aRun) {
-		G4cout << "Run End" << G4endl;
+		G4cout << "Run End"<<aRun->GetRunID() << G4endl;
 		auto man = G4AnalysisManager::Instance();
 		man->Write();
 		man->CloseFile();

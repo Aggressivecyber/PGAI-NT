@@ -31,7 +31,7 @@ private:
 
 
 	G4ParticleGun* fParticlegun = nullptr;
-	G4double fEk = 1.77*0.0001 * CLHEP::eV;
+	G4double fEk = 1.8*0.0001 * CLHEP::eV;
 	G4double fPhi0 = 0. * CLHEP::deg;
 	G4double fDphi = 5. * CLHEP::deg;
 	PrimaryGeneratorMessenger* fMessenger = nullptr;

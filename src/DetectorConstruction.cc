@@ -34,7 +34,14 @@ DetectorConstruction::DetectorConstruction()
 	DefinitionMatertial();
 }
 
-
+void SubstractTubs(G4Tubs* a, G4Tubs* b, G4int id)
+{
+	double theta = 60. * id * CLHEP::deg;
+	G4ThreeVector pos(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest2 = new G4SubtractionSolid("solidTest2", a, b, nullptr, pos);
+}
 void DetectorConstruction::DefinitionMatertial()
 {
 	G4NistManager* nist = G4NistManager::Instance();
@@ -132,7 +139,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 
 	G4double FastTimeConst = 20. * ns;
-	G4double ScintYield = 60000. * (0.1) / MeV;
+	G4double ScintYield = 60000. * (0.005) / MeV;
 	auto mpt = new G4MaterialPropertiesTable();
 	mpt->AddProperty("RINDEX", energy, rindex);
 	mpt->AddProperty("ABSLENGTH", energy, absLength);
@@ -174,12 +181,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 	const G4double R = 120. * mm ;
 	const G4double pix_t = 1*mm;           
-	const G4int    Nang = 512;               
-	const G4int    Nz = 32;                 
+	const G4int    Nang = 2048;               
+	const G4int    Nz = 128;                 
 	const G4double cellZ = (40./Nz) * mm;           
-	const G4double gapT = 0.05 * mm;          
-	const G4double gapZ = 0.02 * mm;            
-	const G4bool   checkOL = 0;
+	const G4double gapT = 0.02 * mm;          
+	const G4double gapZ = 0.01 * mm;            
+	const G4bool   checkOL = 1;
 
 
 	const G4double Htot = Nz * cellZ + (Nz - 1) * gapZ;        
@@ -319,7 +326,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto logicWallPhi = new G4LogicalVolume(solidWallPhi, Al, "WallPhiLV");
 	new G4LogicalSkinSurface("WallPhiSkin", logicWallPhi, surfAl);
 
-	// 可视化（深灰）
+	// 可视化
 	{
 		auto v = new G4VisAttributes(G4Colour(0.2, 0.2, 0.2, 0.9));
 		v->SetForceSolid(true); logicWallPhi->SetVisAttributes(v);
@@ -354,11 +361,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 
 	//测试材料
-auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
-	test->SetScale(1.);
-	test->SetOffset(-15, -15, -15);
-	auto logicaltest = new G4LogicalVolume(test->GetSolid(), Al, "logical");
-	new G4PVPlacement(nullptr, G4ThreeVector(), logicaltest, "test", logicWorld, false, 0);
+	auto solidtest1 = new G4Tubs("solidTest", 0, 18 * mm, Tubs_H, 0, 2 * CLHEP::pi);
 
 	auto soildTubs_Pb = new G4Tubs("soildTubs_Pb", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
 	auto soildTubs_Al = new G4Tubs("soildTubs_Al", 0, Tubs_R, Tubs_H - 0.2 * mm, 0, 2 * CLHEP::pi);
@@ -376,43 +379,93 @@ auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
 	G4VisAttributes* visAttributesHPGe = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
 	visAttributesHPGe->SetForceSolid(true);
 	//logicHPGe->SetVisAttributes(visAttributesHPGe);
-	std::vector<G4LogicalVolume*> logicalTubs;
-	logicalTubs.push_back(logicalTubs_Pb);
-	logicalTubs.push_back(logicalTubs_Al);
-	logicalTubs.push_back(logicalTubs_Cu);
-	logicalTubs.push_back(logicalTubs_Fe);
-	logicalTubs.push_back(logicalTubs_PE);
-	logicalTubs.push_back(logicalTubs_Ni);
-	G4int i = 0;
-	G4double R1 = 10 * mm;
-	for (std::vector<G4LogicalVolume*>::iterator it = logicalTubs.begin(); it != logicalTubs.end(); it++) {
-		G4double theta = i * ((1. / 3.) * CLHEP::pi);
+	std::vector<G4Tubs*> solidTubs;
+	solidTubs.push_back(soildTubs_Pb);
+	solidTubs.push_back(soildTubs_Al);
+	solidTubs.push_back(soildTubs_Cu);
+	solidTubs.push_back(soildTubs_Fe);
+	solidTubs.push_back(soildTubs_PE);
+	solidTubs.push_back(soildTubs_Ni);
+	double theta = 60. * 0 * CLHEP::deg;
+	G4ThreeVector pos(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest2 = new G4SubtractionSolid("solidTest2", solidtest1, soildTubs_Al, nullptr, pos);
 
-		std::string name = ("tubs");
-		std::string temp = name;
-		name += "_";
-		name += (*it)->GetName();
-		G4ThreeVector pos(R1 * std::sin(theta),
-			R1 * std::cos(theta),
-			0);
-		new G4PVPlacement(0, pos, *it, name, logicaltest, false, 1);
-		i++;
-		G4VisAttributes* visAttributes1 = nullptr;
-		if ((*it)->GetMaterial() == Pb) { visAttributes1 = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0)); }
-		else if ((*it)->GetMaterial() == Al) { visAttributes1 = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5)); }
-		else if ((*it)->GetMaterial() == Cu) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.5, 0.5)); }
-		else if ((*it)->GetMaterial() == Fe) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0)); }
-		else if ((*it)->GetMaterial() == PE) { visAttributes1 = new G4VisAttributes(G4Colour(0.5, 1.0, 0.5)); }
-		else if ((*it)->GetMaterial() == Ni) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 0.5)); }
-		else { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0)); }
-		visAttributes1->SetForceSolid(true);
-		(*it)->SetVisAttributes(visAttributes1);
-		name = temp;
+	theta = 60. * 1 * CLHEP::deg;
+	G4ThreeVector pos1(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest3 = new G4SubtractionSolid("solidTest3", solidTest2, soildTubs_Al, nullptr, pos1);
+
+	theta = 60. * 2 * CLHEP::deg;
+	G4ThreeVector pos2(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest4 = new G4SubtractionSolid("solidTest4", solidTest3, soildTubs_Al, nullptr, pos2);
+
+	theta = 60. * 3 * CLHEP::deg;
+	G4ThreeVector pos3(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest5 = new G4SubtractionSolid("solidTest5", solidTest4, soildTubs_Al, nullptr, pos3);
+
+	theta = 60. * 4 * CLHEP::deg;
+	G4ThreeVector pos4(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest6 = new G4SubtractionSolid("solidTest6", solidTest5, soildTubs_Al, nullptr, pos4);
+
+	theta = 60. * 5 * CLHEP::deg;
+	G4ThreeVector pos5(10 * mm * std::sin(theta),
+		10 * mm * std::cos(theta),
+		0);
+	auto solidTest7 = new G4SubtractionSolid("solidTest7", solidTest6, soildTubs_Al, nullptr, pos5);
+
+	auto logicTest2 = new G4LogicalVolume(solidTest7, Al, "logicTest2");
+	new G4PVPlacement (nullptr, G4ThreeVector(), logicTest2, "logicTest2", logicWorld, false, 1, true);
+
+	{
+		std::vector<G4LogicalVolume*> logicalTubs;
+		logicalTubs.push_back(logicalTubs_Pb);
+		logicalTubs.push_back(logicalTubs_Al);
+		logicalTubs.push_back(logicalTubs_Cu);
+		logicalTubs.push_back(logicalTubs_Fe);
+		logicalTubs.push_back(logicalTubs_PE);
+		logicalTubs.push_back(logicalTubs_Ni);
+		G4int i = 0;
+		G4double R1 = 10 * mm;
+		for (std::vector<G4LogicalVolume*>::iterator it = logicalTubs.begin(); it != logicalTubs.end(); it++) {
+			G4double theta = i * ((1. / 3.) * CLHEP::pi);
+
+			std::string name = ("tubs");
+			std::string temp = name;
+			name += "_";
+			name += (*it)->GetName();
+			G4ThreeVector pos(R1 * std::sin(theta),
+				R1 * std::cos(theta),
+				0);
+			new G4PVPlacement(0, pos, *it, name, logicWorld, false, 1, 1);
+			i++;
+			G4VisAttributes* visAttributes1 = nullptr;
+			G4cout << (*it)->GetName() << " -> "
+				<< (*it)->GetMaterial()->GetName() << G4endl;
+
+			if ((*it)->GetMaterial() == Pb) { visAttributes1 = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0)); }
+			else if ((*it)->GetMaterial() == Al) { visAttributes1 = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5)); }
+			else if ((*it)->GetMaterial() == Cu) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.5, 0.5)); }
+			else if ((*it)->GetMaterial() == Fe) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0)); }
+			else if ((*it)->GetMaterial() == PE) { visAttributes1 = new G4VisAttributes(G4Colour(0.5, 1.0, 0.5)); }
+			else if ((*it)->GetMaterial() == Ni) { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 0.5)); }
+			else { visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0)); }
+			visAttributes1->SetForceSolid(true);
+			(*it)->SetVisAttributes(visAttributes1);
+			name = temp;
+		}
 	}
-
-
-	G4VisAttributes* vis1Attributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	logicaltest->SetVisAttributes(vis1Attributes);
+	G4VisAttributes* vis1Attributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5,0.2));
+	vis1Attributes->SetForceSolid(1);
+	logicTest2->SetVisAttributes(vis1Attributes);
 	G4UserLimits* userLimits1 = new G4UserLimits(1 * CLHEP::mm);
 	logicWorld->SetUserLimits(userLimits1);
 

@@ -70,7 +70,6 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 			G4cout << "hce is nullptr!" << G4endl;
 		return;
 	}
-	G4cout << "EndOfEvent entered, fHitsCollection=" << fHitsCollection << G4endl;
 	auto man = G4AnalysisManager::Instance();
 	auto evt = G4RunManager::GetRunManager()->GetCurrentEvent();
 	int evtID = evt->GetEventID();
@@ -80,20 +79,17 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 }
 	G4int nHits = fHitsCollection->entries();
 	if (nHits == 0) {
-		G4cout << "No hits in this event." << G4endl;
 		return;
 	}
 			for (G4int i = 0; i < nHits; i++)
 		{
 			auto hit = (*fHitsCollection)[i];
-			G4cout << hit << G4endl;
 				man->FillNtupleSColumn(0, 0, fcollectionName);
 				man->FillNtupleIColumn(0, 1, evtID);
 				man->FillNtupleDColumn(0, 2, hit->Getedep());
 				if (hit->GetParticlename()=="opticalphoton")
 				{
 					man->FillNtupleIColumn(0, 6, hit->GetcopyNo());
-					G4cout << "copyNo" << hit->GetcopyNo() << G4endl;
 				}
 				else
 				{
@@ -104,5 +100,6 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent* hce) {
 				man->AddNtupleRow(0);
 			}
 			fHitsCollection = nullptr;
+			G4cout << evtID  << "k events processed in " << SensitiveDetectorName << G4endl;
 	}
 

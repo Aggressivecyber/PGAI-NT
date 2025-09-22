@@ -35,3 +35,4 @@ void myHit::Print()
 {
 	G4cout << "edep: " << edep / CLHEP::keV << " keV, pos: " << pos << ", particle: " << particleName << ", time: " << globalTime / CLHEP::ns << " ns" << G4endl;
 }
+
