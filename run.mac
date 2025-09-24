@@ -1,7 +1,8 @@
 
 /control/verbose 1
-/src/phi0  0 deg
-/src/dphi  2 deg
+/src/phi0  98 deg
+/src/dphi  4 deg
+/run/initialize
 /run/beamOn 100000
 /run/beamOn 100000
 /run/beamOn 100000
@@ -22,76 +23,4 @@
 /run/beamOn 100000
 /run/beamOn 100000
 /run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-/run/beamOn 100000
-
-
 

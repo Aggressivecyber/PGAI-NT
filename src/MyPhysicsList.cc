@@ -2,7 +2,7 @@
 
 void MyPhysicsList::SetCuts()
 {
-	SetDefaultCutValue(100 * CLHEP::um);
-
+	SetDefaultCutValue(0.7* CLHEP::mm);
+	SetParticleCuts(100 * CLHEP::um, "opticalphoton");
 	DumpCutValuesTable();
 }

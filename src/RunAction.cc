@@ -29,7 +29,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 	G4int runID = aRun->GetRunID();
 	G4double phi = fPGA->GetPhi0() + runID * fPGA->GetDphi();
 	fPGA->SetPhiCenter(phi);
-	man->SetFileName("hits" +to_string(runID));
+	G4int runID1 = 2+(runID+24) * 4;
+	man->SetFileName("Angle " +to_string(runID1));
 	man->OpenFile();
 
 }

@@ -139,7 +139,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 
 	G4double FastTimeConst = 20. * ns;
-	G4double ScintYield = 60000. * (0.005) / MeV;
+	G4double ScintYield = 60000. * (0.05) / MeV;
 	auto mpt = new G4MaterialPropertiesTable();
 	mpt->AddProperty("RINDEX", energy, rindex);
 	mpt->AddProperty("ABSLENGTH", energy, absLength);
@@ -184,9 +184,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	const G4int    Nang = 2048;               
 	const G4int    Nz = 128;                 
 	const G4double cellZ = (40./Nz) * mm;           
-	const G4double gapT = 0.02 * mm;          
-	const G4double gapZ = 0.01 * mm;            
-	const G4bool   checkOL = 1;
+	const G4double gapT = 0.018* mm;          
+	const G4double gapZ = 0.018 * mm;            
+	const G4bool   checkOL = 0;
 
 
 	const G4double Htot = Nz * cellZ + (Nz - 1) * gapZ;        
@@ -231,7 +231,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
 	// »·ÐÎÉÁË¸Ìå
 	G4double film_Scintillator_T = 1.5 * mm;        
-	const G4double R_sci = R - 8.0 * mm;       
+	const G4double R_sci = R - 3* mm;       
 	const G4double Rin_sci = R_sci - 0.5 * film_Scintillator_T;
 	const G4double Rout_sci = R_sci + 0.5 * film_Scintillator_T;
 	auto solidScintRing = new G4Tubs("ScintRing",
@@ -466,9 +466,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4VisAttributes* vis1Attributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5,0.2));
 	vis1Attributes->SetForceSolid(1);
 	logicTest2->SetVisAttributes(vis1Attributes);
-	G4UserLimits* userLimits1 = new G4UserLimits(1 * CLHEP::mm);
-	logicWorld->SetUserLimits(userLimits1);
-
 	return physWorld;
 }
 
