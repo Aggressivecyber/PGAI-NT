@@ -35,7 +35,10 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	{
 		track->SetTrackStatus(fStopAndKill);
 	}
-	int copyNo = step->GetPostStepPoint()->GetTouchableHandle()->GetCopyNumber();
+	// 用 preStepPoint 的 touchable 取 copyNo: 粒子当前所在体素
+	// (postStepPoint 在边界 step 时指向下一个 volume, copyNo 错误)
+	auto preTouchable = step->GetPreStepPoint()->GetTouchableHandle();
+	int copyNo = preTouchable->GetCopyNumber();
 	hit->edep = step->GetTotalEnergyDeposit()/keV;
 	hit->pos = step->GetPreStepPoint()->GetPosition();
 	hit->particleName = step->GetTrack()->GetParticleDefinition()->GetParticleName();
@@ -43,7 +46,7 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	voxelNum vnum;
 	hit->num_X = vnum.GetNumX(copyNo);
 	hit->num_Y = vnum.GetNumY(copyNo);
-	G4ThreeVector local = step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(hit->pos);
+	G4ThreeVector local = preTouchable->GetHistory()->GetTopTransform().TransformPoint(hit->pos);
 	hit->ux = local.x();
 	hit->uy = local.y();
 	hit->uz = local.z();

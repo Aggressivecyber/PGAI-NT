@@ -1,233 +1,386 @@
 #include "DetectorConstruction.hh"
+
 #include "G4Box.hh"
+#include "G4Tubs.hh"
+#include "G4Cons.hh"
+#include "G4SubtractionSolid.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4UserLimits.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4Material.hh"
 #include "G4NistManager.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4RotationMatrix.hh"
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
-#include "CADMesh.hh"
-#include "G4Tubs.hh"
-#include "G4RotationMatrix.hh"
-#include <vector>
-#include <string>
-#include "G4String.hh"
-#include "SensitiveDetector.hh"
+#include "G4ThreeVector.hh"
 #include "G4SDManager.hh"
+
+#include "FastNeutronTransmissionSD.hh"
+#include "HPGeSpectrometerSD.hh"
+#include "PGAIConfig.hh"
+
 #include <cmath>
 
+DetectorConstruction::DetectorConstruction() {
+	DefineMaterials();
+}
+
+void DetectorConstruction::DefineMaterials() {
+	auto nist = G4NistManager::Instance();
+	nist->FindOrBuildMaterial("G4_AIR");
+	nist->FindOrBuildMaterial("G4_Galactic");
+	nist->FindOrBuildMaterial("G4_POLYETHYLENE");
+	nist->FindOrBuildMaterial("G4_WATER");
+	nist->FindOrBuildMaterial("G4_Al");
+	nist->FindOrBuildMaterial("G4_Fe");
+	nist->FindOrBuildMaterial("G4_Cu");
+	nist->FindOrBuildMaterial("G4_Pb");
+	nist->FindOrBuildMaterial("G4_Ni");
+	nist->FindOrBuildMaterial("G4_Ge");
+	nist->FindOrBuildMaterial("G4_PLEXIGLASS");  // PMMA (CT 测试件背景)
+	// 塑料闪烁体 (EJ200/BC408 近似) — 透射探测器主材料
+	nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+}
+
+G4Material* DetectorConstruction::GetPhantomMaterial(const G4String& name) {
+	auto nist = G4NistManager::Instance();
+	if (name == "PE")  return nist->FindOrBuildMaterial("G4_POLYETHYLENE");
+	if (name == "Al")  return nist->FindOrBuildMaterial("G4_Al");
+	if (name == "Fe")  return nist->FindOrBuildMaterial("G4_Fe");
+	if (name == "Cu")  return nist->FindOrBuildMaterial("G4_Cu");
+	if (name == "Pb")  return nist->FindOrBuildMaterial("G4_Pb");
+	if (name == "Ni")  return nist->FindOrBuildMaterial("G4_Ni");
+	if (name == "water") return nist->FindOrBuildMaterial("G4_WATER");
+	return nist->FindOrBuildMaterial("G4_AIR");  // air / void
+}
+
+G4RotationMatrix* DetectorConstruction::BeamRotation() {
+	auto rot = new G4RotationMatrix();
+	rot->rotateZ(gConfig.angleDeg * CLHEP::deg);
+	return rot;
+}
+
 G4VPhysicalVolume* DetectorConstruction::Construct() {
-	//���϶���
-	G4NistManager* nist = G4NistManager::Instance();
-	G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
-	G4Material* Pb = nist->FindOrBuildMaterial("G4_Pb");
-	G4Material* Fe = nist->FindOrBuildMaterial("G4_Fe");
-	G4Material* Cu = nist->FindOrBuildMaterial("G4_Cu");
-	G4Material* Si = nist->FindOrBuildMaterial("G4_Si");
-	G4Material* Al = nist->FindOrBuildMaterial("G4_Al");
-	G4Material* Ge = nist->FindOrBuildMaterial("G4_Ge");
-	//��˸����϶���
-	std::vector<G4double> energy;
-	std::vector<G4double> spectrum;
-	G4double eMin = 1240.0 / 550.0 * eV; // 2.25 eV
-	G4double eMax = 1240.0 / 380.0 * eV; // 3.26 eV
-	G4int nPoints = 20;
-	for (int i = 0; i < nPoints; i++) {
-		G4double eVal = eMin + i * (eMax - eMin) / (nPoints - 1);
-		energy.push_back(eVal);
-		spectrum.push_back(1.0);
-	}
-	auto siMpt = new G4MaterialPropertiesTable();
-	siMpt->AddProperty("RINDEX", energy, std::vector<G4double>(nPoints, 3.5));
-	Si->SetMaterialPropertiesTable(siMpt);
-	G4Material* Ni = nist->FindOrBuildMaterial("G4_Ni");
-	G4Material* PE = nist->FindOrBuildMaterial("G4_POLYETHYLENE");
-	G4Material* Galactic = nist->FindOrBuildMaterial("G4_Galactic");
-	auto mptGalactic = new G4MaterialPropertiesTable();
-	std::vector<G4double> GalRindex(nPoints, 1.0);
-	mptGalactic->AddProperty("RINDEX", energy, GalRindex);
-	Galactic->SetMaterialPropertiesTable(mptGalactic);
-	G4Element* Li = new G4Element("Lithium-6", "Li6", 3., 6.015 * g / mole);
-	G4Element* F = nist->FindOrBuildElement("F");
-	G4Element* Zn = nist->FindOrBuildElement("Zn");
-	G4Element* S = nist->FindOrBuildElement("S");
-	G4Element* Ag = nist->FindOrBuildElement("Ag");
-	G4double density_LiF = 2.64 * g / cm3;
-	G4double density_ZnS_Ag = 4.10 * g / cm3;
-	G4Material* LiF = new G4Material("LiF", density_LiF, 2);
-	LiF->AddElement(Li, 1);
-	LiF->AddElement(F, 1);
-	G4Material* ZnS_Ag = new G4Material("ZnS_Ag", density_ZnS_Ag, 3);
-	ZnS_Ag->AddElement(Zn, 0.653);
-	ZnS_Ag->AddElement(S, 0.3465);
-	ZnS_Ag->AddElement(Ag, 0.0005);
-	// Silver is 0.05wt% in ZnS:Ag, Abdalla et al., J Mater Sci: Mater Electron, 2022
-	G4Material* ImageLayer = new G4Material("ImageLayer", 0.323 * density_LiF + 0.647 * density_ZnS_Ag + 0.03 * PE->GetDensity(), 3);
-	ImageLayer->AddMaterial(LiF, 0.323);
-	ImageLayer->AddMaterial(ZnS_Ag, 0.647);
-	ImageLayer->AddMaterial(PE, 0.03); //Eljen Technology �C EJ-426 Specification Sheet
-	std::vector<G4double> rindex(nPoints, 1.);
-	std::vector<G4double> absLength(nPoints, 40 * CLHEP::cm);
-	G4double FastTimeConst = 200 * ns;
-	G4double SlowTimeConst = 2000 * ns;
-	G4double YieldRatio = 0.6;
-	G4double ScintYield = 1000. / MeV;
-	auto mpt = new G4MaterialPropertiesTable(); 
-	mpt->AddProperty("RINDEX", energy,rindex);
-	mpt->AddProperty("ABSLENGTH", energy,absLength);  
-	mpt->AddConstProperty("SCINTILLATIONYIELD", ScintYield);
-	mpt->AddConstProperty("RESOLUTIONSCALE", 1.0);
-	mpt->AddConstProperty("SCINTILLATIONTIMECONSTANT1", FastTimeConst);
-	mpt->AddConstProperty("SCINTILLATIONTIMECONSTANT2", SlowTimeConst);
-	mpt->AddProperty("SCINTILLATIONCOMPONENT1", energy, spectrum);
-	mpt->AddProperty("SCINTILLATIONCOMPONENT2", energy, spectrum);
-	mpt->AddConstProperty("SCINTILLATIONYIELD1", ScintYield * YieldRatio);
-	mpt->AddConstProperty("SCINTILLATIONYIELD2", ScintYield * (1.0 - YieldRatio));
-	ImageLayer->SetMaterialPropertiesTable(mpt);
+	auto Air = G4Material::GetMaterial("G4_AIR");
 
+	// ---- 世界 ----
+	G4double worldSize = 1.5 * m;
+	auto solidWorld = new G4Box("World", worldSize, worldSize, worldSize);
+	auto logicWorld = new G4LogicalVolume(solidWorld, Air, "World");
+	auto physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
 
-	//�����嶨��
-	G4double HPGe_H = 60* mm;
-	G4double HPGe_R = 20* mm;
-	G4double Screen_L = 20 * mm;
-	G4double Screen_H = 1 * mm;
-	G4double film_Scintillator_T = 250 * um;
-	G4double Tubs_H = 30 / 2 * mm;
-	G4double Tubs_R = 2.9 * mm;
-	G4double worldSize = 1 * m;
-	G4double Voxel_H = 1 * mm;
-	G4Box* solidWorld = new G4Box("World", worldSize, worldSize, worldSize);
-	G4Tubs* HPGe = new G4Tubs("HPGe", 0, HPGe_R, HPGe_H, 0, 2 * CLHEP::pi);
-	//auto soildScreen = new G4Box("soildScreen",Screen_H,Screen_L, Screen_L);
-	auto soildScintillator = new G4Box("soildScintillator", film_Scintillator_T,Screen_L, Screen_L);
-	auto soildTubs_Pb = new G4Tubs("soildTubs_Pb", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Al = new G4Tubs("soildTubs_Al", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Cu = new G4Tubs("soildTubs_Cu", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Fe = new G4Tubs("soildTubs_Fe", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_PE = new G4Tubs("soildTubs_PE", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	auto soildTubs_Ni = new G4Tubs("soildTubs_Ni", 0, Tubs_R, Tubs_H, 0, 2 * CLHEP::pi);
-	voxelNum vnum;
-	vnum.setNumX(10);
-	vnum.setNumY(10);
-	auto soildVoxel = new G4Box("soildVoxel", Voxel_H, (Screen_L*0.98)/vnum.GetNx(), (Screen_L*0.98)/vnum.GetNy());
-	auto soildMatrixVoxel = new G4Box("soildMatrixVoxel", Voxel_H, Screen_L, Screen_L);
-	logicVoxel = new G4LogicalVolume(soildVoxel, Si, "logicVoxel");
-	logicMatrixVoxel = new G4LogicalVolume(soildMatrixVoxel, Galactic, "logicMatrixVoxel");
-	G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, Galactic, "World");
-	G4VPhysicalVolume* physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
-	logicHPGe = new G4LogicalVolume(HPGe, Ge, "logicHPGe");
-	//CMOS����
-	for (G4int i = 0; i < vnum.GetNx(); i++) {
-		for (G4int j = 0; j < vnum.GetNy(); j++) {
-			G4double xPos = (i - (vnum.GetNx() - 1) / 2.0) * (2*Screen_L/ vnum.GetNx());
-			G4double yPos = (j - (vnum.GetNy() - 1) / 2.0) * (2*Screen_L/ vnum.GetNy());
-			new G4PVPlacement(nullptr, G4ThreeVector(0, xPos, yPos), logicVoxel, "Voxel", logicMatrixVoxel, false, i * vnum.GetNy() + j);
-		}
-	}
-	auto pRot1 = new G4RotationMatrix();
-	pRot1->rotateZ(-getDeg() * CLHEP::deg);
-	G4VPhysicalVolume* physMatrixVoxel = new G4PVPlacement(pRot1, G4ThreeVector((40+Voxel_H)* std::cos(getDeg() * CLHEP::pi / 180), (40 + Voxel_H) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicMatrixVoxel, "MatrixVoxel", logicWorld, false, 0);
-	G4VisAttributes* visAttributesVoxel = new G4VisAttributes(G4Colour(0.8, 0.8, 0.8));
-	visAttributesVoxel->SetForceSolid(true);
-	logicVoxel->SetVisAttributes(visAttributesVoxel);
-	logicMatrixVoxel->SetVisAttributes(G4VisAttributes::GetInvisible());
-	auto solidcollimator = new G4Tubs("collimator", 2*mm, 4 * mm, 20 * mm, 0, 2 * CLHEP::pi);
-	auto test = CADMesh::TessellatedMesh::FromSTL("./test3.stl");
-	test->SetScale(1.);
-	test->SetOffset(-15, -15, -15);
-	//auto logicalScreen = new G4LogicalVolume(soildScreen, Al, "logicalScreen");
-	//���Բ���
-	auto logicalScintillator = new G4LogicalVolume(soildScintillator, ImageLayer, "logicalScintillator");
-	auto logicalTubs_Pb = new G4LogicalVolume(soildTubs_Pb, Pb, "logicalTubs_Pb");
-	auto logicalTubs_Al = new G4LogicalVolume(soildTubs_Al, Al, "logicalTubs_Al");
-	auto logicalTubs_Cu = new G4LogicalVolume(soildTubs_Cu, Cu, "logicalTubs_Cu");
-	auto logicalTubs_Fe = new G4LogicalVolume(soildTubs_Fe, Fe, "logicalTubs_Fe");
-	auto logicalTubs_PE = new G4LogicalVolume(soildTubs_PE, PE, "logicalTubs_PE");
-	auto logicalTubs_Ni = new G4LogicalVolume(soildTubs_Ni, Ni, "logicalTubs_Ni");
-	new G4PVPlacement(pRot1, G4ThreeVector(((-film_Scintillator_T / 2) + (40))* std::cos(getDeg() * CLHEP::pi / 180), ((-film_Scintillator_T / 2) + (40)) * std::sin(getDeg() * CLHEP::pi / 180), 0), logicalScintillator, "Scintillator", logicWorld, 1, 0);
-	auto logicaltest = new G4LogicalVolume(test->GetSolid(), Al, "logical");
-	auto logicalcollimator = new G4LogicalVolume(solidcollimator, Pb, "logicalcollimator");
-	new G4PVPlacement(0, G4ThreeVector(), logicaltest, "test", logicWorld, false, 0);
-	auto pRot2= new G4RotationMatrix();
-	pRot2->rotateZ(-getDeg() * CLHEP::deg);
-	pRot2->rotateX(90 * CLHEP::deg);
-	G4VPhysicalVolume* physHPGe = new G4PVPlacement(pRot2, G4ThreeVector(250*std::sin(-getDeg()*CLHEP::pi/180), 250*std::cos(-getDeg() * CLHEP::pi / 180), 0), logicHPGe, "HPGe", logicWorld, false, 0);
-	new G4PVPlacement(nullptr, G4ThreeVector(0, 0, -HPGe_H), logicalcollimator, "collimator", logicHPGe, false, 0);
-	//���ӻ���������
-	G4VisAttributes* visAttributesCollimator = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	G4VisAttributes* visAttributesHPGe = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	visAttributesCollimator->SetForceWireframe(true);
-	visAttributesHPGe->SetForceSolid(true);
-	logicHPGe->SetVisAttributes(visAttributesHPGe);
-	logicalcollimator->SetVisAttributes(visAttributesCollimator);
-	std::vector<G4LogicalVolume*> logicalTubs;
-	logicalTubs.push_back(logicalTubs_Pb);
-	logicalTubs.push_back(logicalTubs_Al);
-	logicalTubs.push_back(logicalTubs_Cu);
-	logicalTubs.push_back(logicalTubs_Fe);
-	logicalTubs.push_back(logicalTubs_PE);
-	logicalTubs.push_back(logicalTubs_Ni);
-	G4int i = 0;
-	G4double R = 10 * mm;
-	for (std::vector<G4LogicalVolume*>::iterator it = logicalTubs.begin(); it != logicalTubs.end(); it++) {
-		G4double theta = i * ((1. / 3.) * CLHEP::pi);
-		std::cout << "i = " << i << std::endl;
-		std::string name = ("tubs");
-		std::string temp = name;
-		name += "_";
-		name += (*it)->GetName();
-		G4ThreeVector pos(R * std::sin(theta),
-			R * std::cos(theta),
-			0);
-		new G4PVPlacement(0, pos, *it, name, logicaltest, false, 1);
-		i++;
-		G4VisAttributes* visAttributes1 = nullptr;
-		if ((*it)->GetMaterial() == Pb) {visAttributes1 = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0));}
-		else if ((*it)->GetMaterial() == Al) {visAttributes1 = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));}
-		else if ((*it)->GetMaterial() == Cu) {visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.5, 0.5));}
-		else if ((*it)->GetMaterial() == Fe) {visAttributes1 = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));}
-		else if ((*it)->GetMaterial() == PE) {visAttributes1 = new G4VisAttributes(G4Colour(0.5, 1.0, 0.5));}
-		else if ((*it)->GetMaterial() == Ni) {visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 0.5));}
-		else {visAttributes1 = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));}
-		visAttributes1->SetForceSolid(true);
-		(*it)->SetVisAttributes(visAttributes1);
-		name = temp;
-	}
-	G4VisAttributes* visAttributesScreen = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	G4VisAttributes* visAttributesScintillator = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0));
-	visAttributesScintillator->SetForceSolid(true);
-	//logicalScreen->SetVisAttributes(visAttributesScreen);
-	logicalScintillator->SetVisAttributes(visAttributesScintillator);
-	G4VisAttributes* vis1Attributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	logicaltest->SetVisAttributes(vis1Attributes);
-	G4UserLimits* userLimits1 = new G4UserLimits(5 * CLHEP::mm);
-	G4UserLimits* userLimits2 = new G4UserLimits(5 * CLHEP::um);
-	logicWorld->SetUserLimits(userLimits1);
-	logicalScintillator->SetUserLimits(userLimits2);
-	G4VisAttributes* visAttributes = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
-	logicWorld->SetVisAttributes(visAttributes);
+	// ---- 样品台 (绕 z 轴旋转 = tomography 投影角度) ----
+	// 真实中子成像 CT: 样品旋转, 源+探测器固定。母体只包裹样品区域, 避免与探测器重叠。
+	auto solidStage = new G4Box("SampleStage", 25 * mm, 25 * mm, 25 * mm);
+	auto logicStage = new G4LogicalVolume(solidStage, Air, "SampleStageLV");
+	logicStage->SetVisAttributes(G4VisAttributes::GetInvisible());
+	auto stageRot = new G4RotationMatrix();
+	stageRot->rotateZ(gConfig.angleDeg * CLHEP::deg);
+	new G4PVPlacement(stageRot, G4ThreeVector(), logicStage, "SampleStage", logicWorld, false, 0);
+
+	BuildPhantom(logicStage);   // phantom 随样品台一起旋转
+
+	// ---- 双模态探测器 (固定, 不随角度转) ----
+	BuildTransmissionDetector(logicWorld);
+	BuildHPGeDetector(logicWorld);
+
+	logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
 	return physWorld;
 }
 
+// ===================== Channel A: 多层闪烁屏 (EJ-200 风格) =====================
+// 结构: [Al 入射窗] [塑料闪烁体(灵敏)] [Al 出射窗/反光层] + Al 框架
+// 真实快中子成像屏: Al 保护窗 + 闪烁体 + 反光层, 光学读出在外部(CCD)
+void DetectorConstruction::BuildTransmissionDetector(G4LogicalVolume* world) {
+	auto Plastic = G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+	auto Al = G4Material::GetMaterial("G4_Al");
+	auto Air = G4Material::GetMaterial("G4_AIR");
+
+	G4double size = gConfig.detectorSize;
+	G4double thk = gConfig.scintThickness;
+	G4double wThk = gConfig.screenWindowThk;
+	G4double frame = gConfig.screenFrame;
+
+	// 灵敏闪烁体 (SD 绑定目标)
+	auto solidScint = new G4Box("Scintillator", thk * 0.5, size * 0.5, size * 0.5);
+	logicTransmissionScreen = new G4LogicalVolume(solidScint, Plastic, "ScintillatorLV");
+	{
+		auto v = new G4VisAttributes(G4Colour(0.2, 0.85, 0.85, 0.65));
+		v->SetForceSolid(true);
+		logicTransmissionScreen->SetVisAttributes(v);
+	}
+
+	// Al 入射窗 / 出射窗 (非灵敏, 模拟封装与反光层)
+	auto solidWin = new G4Box("ScreenWindow", wThk * 0.5, size * 0.5, size * 0.5);
+	auto logicWinF = new G4LogicalVolume(solidWin, Al, "ScreenWindowFrontLV");
+	auto logicWinB = new G4LogicalVolume(solidWin, Al, "ScreenWindowBackLV");
+	auto visAl = new G4VisAttributes(G4Colour(0.75, 0.75, 0.78, 0.8));
+	visAl->SetForceSolid(true);
+	logicWinF->SetVisAttributes(visAl);
+	logicWinB->SetVisAttributes(visAl);
+
+	// Al 框架母体 (容纳窗+闪烁体)
+	G4double totalThk = thk + 2 * wThk;
+	auto solidCarrier = new G4Box("ScreenCarrier", totalThk * 0.5 + frame,
+	                              size * 0.5 + frame, size * 0.5 + frame);
+	auto logicCarrier = new G4LogicalVolume(solidCarrier, Air, "ScreenCarrierLV");
+	logicCarrier->SetVisAttributes(G4VisAttributes::GetInvisible());
+
+	new G4PVPlacement(nullptr, G4ThreeVector(-thk * 0.5 - wThk * 0.5, 0, 0),
+	                  logicWinF, "ScreenWindowFront", logicCarrier, false, 0);
+	new G4PVPlacement(nullptr, G4ThreeVector(0, 0, 0),
+	                  logicTransmissionScreen, "Scintillator", logicCarrier, false, 0);
+	new G4PVPlacement(nullptr, G4ThreeVector(thk * 0.5 + wThk * 0.5, 0, 0),
+	                  logicWinB, "ScreenWindowBack", logicCarrier, false, 0);
+
+	// 整体固定在束流下游 +x
+	new G4PVPlacement(nullptr, G4ThreeVector(gConfig.detectorDistance, 0, 0),
+	                  logicCarrier, "TransmissionScreen", world, false, 0);
+}
+
+// ===================== Channel B: 真实 HPGe (杜瓦+真空+死层+灵敏芯) + Pb 锥孔准直器 =====================
+void DetectorConstruction::BuildHPGeDetector(G4LogicalVolume* world) {
+	auto Ge = G4Material::GetMaterial("G4_Ge");
+	auto Pb = G4Material::GetMaterial("G4_Pb");
+	auto Al = G4Material::GetMaterial("G4_Al");
+	auto Vac = G4Material::GetMaterial("G4_Galactic");  // 真空近似
+
+	G4double R = gConfig.hpgeR;
+	G4double H = gConfig.hpgeH;
+	G4double dead = gConfig.hpgeDeadLayer;
+	G4double vac = gConfig.hpgeVacuumGap;
+	G4double housing = gConfig.hpgeHousingThk;
+
+	// --- Ge 灵敏芯 (SD 绑定目标) ---
+	G4double Rcore = std::max(R - dead, 0.1 * mm);
+	auto solidCore = new G4Tubs("HPGeCore", 0, Rcore, H * 0.5, 0, 2 * CLHEP::pi);
+	logicHPGe = new G4LogicalVolume(solidCore, Ge, "HPGeCoreLV");
+	{
+		auto v = new G4VisAttributes(G4Colour(0.5, 0.5, 0.95, 0.9));
+		v->SetForceSolid(true);
+		logicHPGe->SetVisAttributes(v);
+	}
+
+	// --- Ge 死层 (外环, 非灵敏, 粒子穿越损失能量) ---
+	auto solidDead = new G4Tubs("HPGeDeadLayer", Rcore, R, H * 0.5, 0, 2 * CLHEP::pi);
+	auto logicDead = new G4LogicalVolume(solidDead, Ge, "HPGeDeadLayerLV");
+	{
+		auto v = new G4VisAttributes(G4Colour(0.35, 0.35, 0.7, 0.5));
+		v->SetForceSolid(true);
+		logicDead->SetVisAttributes(v);
+	}
+
+	// --- 真空层 (杜瓦内壁与 Ge 之间) ---
+	G4double RvacOut = R + vac;
+	G4double Hvac = H * 0.5 + vac;
+	auto solidVacuum = new G4Tubs("HPGeVacuum", R, RvacOut, Hvac, 0, 2 * CLHEP::pi);
+	auto logicVacuum = new G4LogicalVolume(solidVacuum, Vac, "HPGeVacuumLV");
+	logicVacuum->SetVisAttributes(G4VisAttributes::GetInvisible());
+
+	// --- Al 杜瓦外壳 ---
+	G4double RhouseOut = RvacOut + housing;
+	auto solidHousing = new G4Tubs("HPGeHousing", RvacOut, RhouseOut, Hvac, 0, 2 * CLHEP::pi);
+	auto logicHousing = new G4LogicalVolume(solidHousing, Al, "HPGeHousingLV");
+	{
+		auto v = new G4VisAttributes(G4Colour(0.8, 0.8, 0.85, 0.9));
+		v->SetForceSolid(true);
+		logicHousing->SetVisAttributes(v);
+	}
+
+	// 同心多层直接放 world (轴沿 +y), 不嵌套避免越界
+	G4ThreeVector perpDir(0, 1, 0);
+	G4ThreeVector hpgePos = perpDir * gConfig.hpgeDistance;
+	auto rotDet = new G4RotationMatrix();
+	rotDet->rotateX(90 * CLHEP::deg);  // Tubs z 轴 -> y
+	new G4PVPlacement(rotDet, hpgePos, logicHousing, "HPGeHousing", world, false, 0);
+	new G4PVPlacement(new G4RotationMatrix(*rotDet), hpgePos, logicVacuum, "HPGeVacuum", world, false, 0);
+	new G4PVPlacement(new G4RotationMatrix(*rotDet), hpgePos, logicDead, "HPGeDeadLayer", world, false, 0);
+	new G4PVPlacement(new G4RotationMatrix(*rotDet), hpgePos, logicHPGe, "HPGe", world, false, 0);
+
+	// --- Pb 锥孔准直器 (前端小孔对样品, 后端大孔对 HPGe) ---
+	G4double cLen = gConfig.collimLen;
+	G4double eps = 0.2 * mm;
+	auto solidCollimBody = new G4Tubs("CollimBody", 0, gConfig.collimRout, cLen * 0.5, 0, 2 * CLHEP::pi);
+	// G4Cons(Rmin1,Rmax1,Rmin2,Rmax2,Dz): -z端 Rmax1(样品侧小孔), +z端 Rmax2(HPGe侧大孔)
+	auto solidCollimHole = new G4Cons("CollimHole", 0, gConfig.collimHoleFront,
+	                                  0, gConfig.collimHoleBack, cLen * 0.5 + eps,
+	                                  0, 2 * CLHEP::pi);
+	auto solidCollim = new G4SubtractionSolid("Collimator", solidCollimBody, solidCollimHole);
+	auto logicCollim = new G4LogicalVolume(solidCollim, Pb, "CollimatorLV");
+	{
+		auto v = new G4VisAttributes(G4Colour(0.35, 0.35, 0.4, 0.92));
+		v->SetForceSolid(true);
+		logicCollim->SetVisAttributes(v);
+	}
+	auto rotCollim = new G4RotationMatrix();
+	rotCollim->rotateX(-90 * CLHEP::deg);  // Cons +z(大孔,HPGe侧) -> 世界 +y(HPGe)
+	// 紧贴 HPGe 杜瓦前端 (朝样品)
+	G4double housingFront = gConfig.hpgeDistance - Hvac * 0.5;
+	G4ThreeVector collimPos(0, housingFront - cLen * 0.5, 0);
+	new G4PVPlacement(rotCollim, collimPos, logicCollim, "Collimator", world, false, 0);
+}
+
+// ===================== Phantom 模式 =====================
+
+void DetectorConstruction::BuildPhantom(G4LogicalVolume* world) {
+	const G4String& mode = gConfig.phantomMode;
+	if (mode == "single")             BuildSingleMaterialPhantom(world);
+	else if (mode == "degeneracy")    BuildMaterialDegeneracyPhantom(world);
+	else if (mode == "steel")         BuildSteelShellHydrogenPhantom(world);
+	else if (mode == "cttest")        BuildCTTestPhantom(world);
+	else                              BuildEmptyPhantom(world);  // empty / default
+}
+
+void DetectorConstruction::BuildEmptyPhantom(G4LogicalVolume* /*world*/) {
+	// 空场: 不放任何样品 (用于 I0)
+}
+
+void DetectorConstruction::BuildSingleMaterialPhantom(G4LogicalVolume* world) {
+	// 单材料圆柱 (标定), 轴沿 z, 厚度沿 x 方向 (束流方向) 不对 — 这里用轴沿 x 的圆柱
+	auto mat = GetPhantomMaterial(gConfig.singleMaterial);
+	G4double thick = gConfig.singleThickness;
+	G4double radius = 15 * mm;
+	// 用 G4Tubs, 轴沿 x: rotateY(90)
+	auto solid = new G4Tubs("SinglePhantom", 0, radius, thick * 0.5, 0, 2 * CLHEP::pi);
+	auto logic = new G4LogicalVolume(solid, mat, "SinglePhantomLV");
+	auto rot = new G4RotationMatrix();
+	rot->rotateY(90 * CLHEP::deg);
+	new G4PVPlacement(rot, G4ThreeVector(), logic, "SinglePhantom", world, false, 0);
+	logic->SetVisAttributes(new G4VisAttributes(G4Colour(0.9, 0.6, 0.2, 0.7)));
+}
+
+void DetectorConstruction::BuildMaterialDegeneracyPhantom(G4LogicalVolume* world) {
+	// 6 个材料块, 不同厚度, 设计相近 4.05MeV 中子透射衰减 (演示材料退化)
+	// 块为小圆柱 (轴沿 x/束流), 在 y 方向并排, z=0
+	struct Block { const char* mat; double thick_mm; double y_mm; };
+	// 厚度选择使宏观衰减量级相近 (粗略, 中子 4MeV)
+	Block blocks[] = {
+		{"PE",  60.0, -18.0},
+		{"Al",  40.0, -10.8},
+		{"Fe",  15.0,  -3.6},
+		{"Cu",  12.0,   3.6},
+		{"Pb",  10.0,  10.8},
+		{"air", 40.0,  18.0},
+	};
+	G4double radius = 3.0 * mm;
+	for (const auto& b : blocks) {
+		auto mat = GetPhantomMaterial(b.mat);
+		G4double thick = b.thick_mm * mm;
+		auto solid = new G4Tubs(G4String("Deg_") + b.mat, 0, radius, thick * 0.5, 0, 2 * CLHEP::pi);
+		auto logic = new G4LogicalVolume(solid, mat, G4String("Deg_") + b.mat + "LV");
+		auto rot = new G4RotationMatrix();
+		rot->rotateY(90 * CLHEP::deg);
+		new G4PVPlacement(rot, G4ThreeVector(0, b.y_mm * mm, 0), logic,
+		                  G4String("Deg_") + b.mat, world, false, 0);
+		G4Colour c = (G4String(b.mat) == "air") ? G4Colour(0.9, 0.9, 0.9, 0.2)
+		           : (G4String(b.mat) == "PE")  ? G4Colour(0.3, 0.9, 0.4, 0.7)
+		           : (G4String(b.mat) == "Pb")  ? G4Colour(0.3, 0.3, 0.9, 0.7)
+		           : G4Colour(0.8, 0.5, 0.3, 0.7);
+		logic->SetVisAttributes(new G4VisAttributes(c));
+	}
+}
+
+void DetectorConstruction::BuildSteelShellHydrogenPhantom(G4LogicalVolume* world) {
+	// Fe 外壳圆筒 (轴沿 x), 内部含 PE / water / void / Al / Cu 区块
+	auto Fe = GetPhantomMaterial("Fe");
+	G4double rIn = 10 * mm, rOut = 14 * mm, lenX = 40 * mm;
+
+	// 外壳: 大 Fe 圆柱减内孔
+	auto solidShellOuter = new G4Tubs("SteelShellOuter", 0, rOut, lenX * 0.5, 0, 2 * CLHEP::pi);
+	auto solidShellInner = new G4Tubs("SteelShellInner", 0, rIn, lenX * 0.5, 0, 2 * CLHEP::pi);
+	auto solidShell = new G4SubtractionSolid("SteelShell", solidShellOuter, solidShellInner);
+	auto logicShell = new G4LogicalVolume(solidShell, Fe, "SteelShellLV");
+	auto rotShell = new G4RotationMatrix();
+	rotShell->rotateY(90 * CLHEP::deg);
+	new G4PVPlacement(rotShell, G4ThreeVector(), logicShell, "SteelShell", world, false, 0);
+	logicShell->SetVisAttributes(new G4VisAttributes(G4Colour(0.5, 0.5, 0.55, 0.85)));
+
+	// 内部填充 (沿 y 方向排布, 半径 < rIn)
+	struct Fill { const char* mat; double y_mm; };
+	Fill fills[] = {
+		{"PE",    -6.0},
+		{"water",  -2.0},
+		{"air",    2.0},
+		{"Al",     6.0},
+		{"Cu",     0.0},  // 居中铜芯 (小)
+	};
+	for (const auto& f : fills) {
+		auto mat = GetPhantomMaterial(f.mat);
+		G4double r = (G4String(f.mat) == "Cu") ? 2.0 * mm : 2.5 * mm;
+		G4double flen = (lenX - 4 * mm);  // 略短于外壳
+		auto solid = new G4Tubs(G4String("Fill_") + f.mat, 0, r, flen * 0.5, 0, 2 * CLHEP::pi);
+		auto logic = new G4LogicalVolume(solid, mat, G4String("Fill_") + f.mat + "LV");
+		auto rot = new G4RotationMatrix();
+		rot->rotateY(90 * CLHEP::deg);
+		new G4PVPlacement(rot, G4ThreeVector(0, f.y_mm * mm, 0), logic,
+		                  G4String("Fill_") + f.mat, world, false, 0);
+		G4Colour c = (G4String(f.mat) == "PE")    ? G4Colour(0.3, 0.9, 0.4, 0.8)
+		           : (G4String(f.mat) == "water") ? G4Colour(0.2, 0.5, 0.9, 0.8)
+		           : (G4String(f.mat) == "Cu")    ? G4Colour(0.9, 0.5, 0.2, 0.8)
+		           : (G4String(f.mat) == "Al")    ? G4Colour(0.8, 0.8, 0.85, 0.8)
+		           : G4Colour(0.9, 0.9, 0.9, 0.3);
+		logic->SetVisAttributes(new G4VisAttributes(c));
+	}
+}
+
+// ===================== CT 测试件: PMMA 大圆柱 + 环绕 6 材料小圆柱 (全轴沿 z) =====================
+// 标准 2D 平行束 CT 几何: 所有特征轴沿旋转轴 z, z 切片重建无模糊。
+// 一次成像即可测试 PE/Al/Fe/Cu/Pb/Ni 多材料 + PGAI-NT 调试。
+void DetectorConstruction::BuildCTTestPhantom(G4LogicalVolume* world) {
+	auto PMMA = G4Material::GetMaterial("G4_PLEXIGLASS");
+
+	G4double Rbig = 20 * mm;     // 大圆柱半径
+	G4double H = 40 * mm;        // 高度 (z 方向)
+	G4double Rring = 13 * mm;    // 小圆柱环绕半径
+	G4double Rsmall = 4 * mm;    // 小圆柱半径
+
+	// PMMA 背景大圆柱 (轴沿 z, G4Tubs 默认)
+	auto solidBig = new G4Tubs("CTPhantom", 0, Rbig, H * 0.5, 0, 2 * CLHEP::pi);
+	auto logicBig = new G4LogicalVolume(solidBig, PMMA, "CTPhantomLV");
+	logicBig->SetVisAttributes(new G4VisAttributes(G4Colour(0.9, 0.9, 0.92, 0.5)));
+	new G4PVPlacement(nullptr, G4ThreeVector(), logicBig, "CTPhantom", world, false, 0);
+
+	// 6 种材料小圆柱环绕 (60° 间隔), 轴沿 z, 同高度
+	const char* mats[6] = {"PE", "Al", "Fe", "Cu", "Pb", "Ni"};
+	G4Colour cols[6] = {
+		G4Colour(0.3, 0.9, 0.4, 0.95),   // PE
+		G4Colour(0.8, 0.8, 0.85, 0.95),  // Al
+		G4Colour(0.7, 0.4, 0.3, 0.95),   // Fe
+		G4Colour(0.9, 0.5, 0.2, 0.95),   // Cu
+		G4Colour(0.3, 0.3, 0.9, 0.95),   // Pb
+		G4Colour(0.5, 0.9, 0.9, 0.95),   // Ni
+	};
+	for (G4int i = 0; i < 6; ++i) {
+		G4double theta = i * 60.0 * CLHEP::deg;
+		G4double x = Rring * std::cos(theta);
+		G4double y = Rring * std::sin(theta);
+		auto mat = GetPhantomMaterial(mats[i]);
+		G4String nm = G4String("CTRod_") + mats[i];
+		auto solidRod = new G4Tubs(nm, 0, Rsmall, H * 0.5, 0, 2 * CLHEP::pi);
+		auto logicRod = new G4LogicalVolume(solidRod, mat, nm + "LV");
+		auto va = new G4VisAttributes(cols[i]);
+		va->SetForceSolid(true);
+		logicRod->SetVisAttributes(va);
+		new G4PVPlacement(nullptr, G4ThreeVector(x, y, 0), logicRod, nm, logicBig, false, i);
+	}
+}
+
 void DetectorConstruction::ConstructSDandField() {
-	auto sdManager = G4SDManager::GetSDMpointer();
-	SensitiveDetector* CMOSsd = new SensitiveDetector(G4String("CMOS"),0);
-	SensitiveDetector* HPGesd = new SensitiveDetector(G4String("HPGE"),1);
-	logicVoxel->SetSensitiveDetector(CMOSsd);
-	logicHPGe->SetSensitiveDetector(HPGesd);
-	sdManager->AddNewDetector(CMOSsd);
-	sdManager->AddNewDetector(HPGesd);
+	// MT: 每个 worker 线程独立创建 SD + HC (不可 static 共享)
+	auto sdMan = G4SDManager::GetSDMpointer();
+
+	if (logicTransmissionScreen) {
+		auto sd = new FastNeutronTransmissionSD("TransmissionSD");
+		sdMan->AddNewDetector(sd);
+		logicTransmissionScreen->SetSensitiveDetector(sd);
+	}
+	if (logicHPGe) {
+		auto sd = new HPGeSpectrometerSD("HPGeSD");
+		sdMan->AddNewDetector(sd);
+		logicHPGe->SetSensitiveDetector(sd);
+	}
 }
 
-void DetectorConstruction::setDeg(double nDeg)
-{
-	deg = nDeg;
-}
-
-double DetectorConstruction::getDeg()
-{
-	return deg;
-}
+void DetectorConstruction::setDeg(double d) { gConfig.angleDeg = d; }
+double DetectorConstruction::getDeg() const { return gConfig.angleDeg; }

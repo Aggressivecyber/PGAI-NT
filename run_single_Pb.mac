@@ -1,0 +1,8 @@
+# 单材料标定: Pb
+/pgai/source/spotSize 36 mm
+/pgai/phantom/mode single
+/pgai/phantom/singleMaterial Pb
+/pgai/phantom/singleThickness 20 mm
+/pgai/run/angle 0 deg
+/run/initialize
+/run/beamOn 50000

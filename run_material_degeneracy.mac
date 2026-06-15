@@ -1,0 +1,6 @@
+# 材料退化 phantom (演示 neutron-only 混淆)
+/pgai/source/spotSize 36 mm
+/pgai/phantom/mode degeneracy
+/pgai/run/angle 0 deg
+/run/initialize
+/run/beamOn 50000

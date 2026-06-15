@@ -1,5 +1,6 @@
-/pgai/phantom/mode degeneracy
+# 空场 (I0 基准)
 /pgai/source/spotSize 36 mm
+/pgai/phantom/mode empty
 /pgai/run/angle 0 deg
 /run/initialize
-/run/beamOn 10000
+/run/beamOn 50000

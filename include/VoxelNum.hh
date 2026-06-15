@@ -5,8 +5,8 @@
 class voxelNum
 {
 private:
-	int voxelNx{ 10 };
-	int voxelNy{ 10 };
+	int voxelNx{ 128 };
+	int voxelNy{ 128 };
 public:
 	inline int GetNumY(int copyNo)
 	{
