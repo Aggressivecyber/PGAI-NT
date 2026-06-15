@@ -1,0 +1,15 @@
+#class tools::wcsv::ntuple
+#title SD hits table
+#separator 44
+#vector_separator 59
+#column int sd
+#column int event
+#column double edep_keV
+#column double pos_X_mm
+#column double pos_Y_mm
+#column double pos_Z_mm
+#column int num_X
+#column int num_Y
+#column double Time_ns
+#column string pname
+0,942,0,-0.875,-7.68394,-10.1048,0,0,30.5017,neutron

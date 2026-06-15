@@ -5,19 +5,11 @@
 
 RunAction::RunAction() : G4UserRunAction() {
 	auto man = G4AnalysisManager::Instance();
-	man->SetNtupleMerging(1);
-	man->SetVerboseLevel(1);
-}
-RunAction::~RunAction() {
-	delete G4AnalysisManager::Instance();
-}
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
-	G4cout << "Run Start" << G4endl;
-	auto man = G4AnalysisManager::Instance();
-	G4int runID = aRun->GetRunID();
-	man->SetFileName("hits"+std::to_string(runID));
+	// 注: csv 输出不支持 MT ntuple merging, 各 worker 分片写 hits{runID}_nt_hits_t{N}.csv
+	man->SetVerboseLevel(0);
 	man->SetDefaultFileType("csv");
-	man->OpenFile();
+
+	// ntuple 在构造时创建一次, 避免多 run 重复创建报错
 	man->CreateNtuple("hits", "SD hits table");
 	man->CreateNtupleIColumn("sd");
 	man->CreateNtupleIColumn("event");
@@ -30,10 +22,20 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 	man->CreateNtupleDColumn("Time_ns");
 	man->CreateNtupleSColumn("pname");
 	man->FinishNtuple();
-
 }
-void RunAction::EndOfRunAction(const G4Run* aRun) {
-	G4cout << "Run End" << G4endl;
+
+RunAction::~RunAction() {
+	// 不手动 delete AnalysisManager 单例 (MT 下会重复释放, 由 RunManager 统一清理)
+}
+
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
+	auto man = G4AnalysisManager::Instance();
+	G4int runID = aRun->GetRunID();
+	man->SetFileName("hits" + std::to_string(runID));
+	man->OpenFile();
+}
+
+void RunAction::EndOfRunAction(const G4Run* /*aRun*/) {
 	auto man = G4AnalysisManager::Instance();
 	man->Write();
 	man->CloseFile();

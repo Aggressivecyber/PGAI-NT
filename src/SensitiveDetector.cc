@@ -14,7 +14,7 @@
 
 
 
-SensitiveDetector::SensitiveDetector(G4String& name,G4int fSDtag) : G4VSensitiveDetector(name),SDtag(fSDtag),fHitsCollection(nullptr),fHCID(-1){
+SensitiveDetector::SensitiveDetector(const G4String& name,G4int fSDtag) : G4VSensitiveDetector(name),SDtag(fSDtag),fHitsCollection(nullptr),fHCID(-1){
 	collectionName.insert("MyHitsCollection");
 }
 SensitiveDetector::~SensitiveDetector() {}
@@ -41,10 +41,8 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* history)
 	hit->particleName = step->GetTrack()->GetParticleDefinition()->GetParticleName();
 	hit->globalTime = step->GetPreStepPoint()->GetGlobalTime();
 	voxelNum vnum;
-	hit->num_X =vnum.GetNumX(copyNo);
-	hit->num_Y =vnum.GetNumY(copyNo);
-	G4cout << vnum.GetNumX(copyNo) << G4endl;
-	G4cout << vnum.GetNumY(copyNo) << G4endl;
+	hit->num_X = vnum.GetNumX(copyNo);
+	hit->num_Y = vnum.GetNumY(copyNo);
 	G4ThreeVector local = step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(hit->pos);
 	hit->ux = local.x();
 	hit->uy = local.y();

@@ -1,10 +1,12 @@
 #ifndef VOXELNUM_HH
 #define VOXELNUM_HH 1
+
+// 体素矩阵维度 (与 DetectorConstruction 中 setNumX/Y 保持一致)
 class voxelNum
 {
 private:
-	int voxelNx;
-	int voxelNy;
+	int voxelNx{ 10 };
+	int voxelNy{ 10 };
 public:
 	inline int GetNumY(int copyNo)
 	{

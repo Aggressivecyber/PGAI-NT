@@ -11,7 +11,7 @@
 
 class SensitiveDetector : public G4VSensitiveDetector {
 public:
-	explicit SensitiveDetector(G4String& name, G4int fSDtag);
+	explicit SensitiveDetector(const G4String& name, G4int fSDtag);
 	~SensitiveDetector() override;
 	G4bool ProcessHits(G4Step* step, G4TouchableHistory* history) override;
 	void Initialize(G4HCofThisEvent*) override;
