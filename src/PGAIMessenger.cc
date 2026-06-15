@@ -53,6 +53,10 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 
 	fCmdSmearHPGe = new G4UIcmdWithABool("/pgai/hpge/smear", this);
 	fCmdSmearHPGe->SetGuidance("Enable Gaussian energy resolution smearing on HPGe");
+	fCmdHPGeCenterY = new G4UIcmdWithADoubleAndUnit("/pgai/hpge/centerY", this);
+	fCmdHPGeCenterY->SetGuidance("Scanning PGAI: collimator view center y (scan sample strips)");
+	fCmdHPGeCenterY->SetParameterName("cy", false);
+	fCmdHPGeCenterY->SetDefaultUnit("mm");
 
 	fCmdPhantomMode = new G4UIcmdWithAString("/pgai/phantom/mode", this);
 	fCmdPhantomMode->SetGuidance("empty | single | degeneracy | steel");
@@ -77,6 +81,7 @@ PGAIMessenger::~PGAIMessenger() {
 	delete fCmdEnergy; delete fCmdEnergySpread; delete fCmdSpotSize; delete fCmdDivergence;
 	delete fCmdPixelsX; delete fCmdPixelsY; delete fCmdScintThickness;
 	delete fCmdSmearHPGe;
+	delete fCmdHPGeCenterY;
 	delete fCmdPhantomMode; delete fCmdSingleMaterial; delete fCmdSingleThickness;
 	delete fCmdAngle;
 	delete fDir; delete fDirSource; delete fDirDet; delete fDirHPGe; delete fDirPhantom; delete fDirRun;
@@ -91,6 +96,7 @@ void PGAIMessenger::SetNewValue(G4UIcommand* cmd, G4String value) {
 	else if (cmd == fCmdPixelsY)     gConfig.pixelsY = fCmdPixelsY->GetNewIntValue(value);
 	else if (cmd == fCmdScintThickness) gConfig.scintThickness = fCmdScintThickness->GetNewDoubleValue(value);
 	else if (cmd == fCmdSmearHPGe)   gConfig.smearHPGe = fCmdSmearHPGe->GetNewBoolValue(value);
+	else if (cmd == fCmdHPGeCenterY) gConfig.hpgeCenterY = fCmdHPGeCenterY->GetNewDoubleValue(value);
 	else if (cmd == fCmdPhantomMode) gConfig.phantomMode = value;
 	else if (cmd == fCmdSingleMaterial) gConfig.singleMaterial = value;
 	else if (cmd == fCmdSingleThickness) gConfig.singleThickness = fCmdSingleThickness->GetNewDoubleValue(value);

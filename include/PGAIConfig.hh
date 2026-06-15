@@ -35,6 +35,8 @@ struct PGAIConfig {
 	G4double collimHoleFront = 5.0 * mm; // 样品侧孔半径 (小, 聚焦视场)
 	G4double collimHoleBack = 12.0 * mm; // HPGe 侧孔半径 (大, 覆盖晶体)
 	G4bool smearHPGe = false;            // 高斯展宽开关
+	// 扫描式 PGAI: 准直器视场中心 y (mm), 整体平移 HPGe+准直器看样品不同条带
+	G4double hpgeCenterY = 0.0 * mm;
 	// FWHM(E) = sqrt(a^2 + b*E + c*E^2)  [能量单位 keV]
 	G4double resA = 1.0 * keV;
 	G4double resB = 0.0;

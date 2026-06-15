@@ -85,24 +85,32 @@ def pixel_to_coord(pixel: np.ndarray, n_pix: int, size_mm: float) -> np.ndarray:
 
 
 # ---- degeneracy phantom 真值 (须与 BuildMaterialDegeneracyPhantom 一致) ----
-# 块中心 y (mm), 半径 3mm, 材料
+# (材料, 块中心 y mm, 厚度 mm) — 不同材料不同厚度, 制造中子透射退化
 DEGEN_BLOCKS = [
-    ("PE",  -18.0),
-    ("Al",  -10.8),
-    ("Fe",  -3.6),
-    ("Cu",   3.6),
-    ("Pb",  10.8),
-    ("air", 18.0),
+    ("PE",  -18.0, 60.0),
+    ("Al",  -10.8, 40.0),
+    ("Fe",  -3.6, 15.0),
+    ("Cu",   3.6, 12.0),
+    ("Pb",  10.8, 10.0),
+    ("air", 18.0, 40.0),
 ]
 DEGEN_BLOCK_R_MM = 3.0
 
 
 def degen_truth_label(y_mm: float, z_mm: float) -> str:
     """根据局部坐标返回 degeneracy phantom 的材料真值 (无块返回 'air'背景)。"""
-    for mat, yc in DEGEN_BLOCKS:
+    for mat, yc, _ in DEGEN_BLOCKS:
         if (y_mm - yc) ** 2 + z_mm ** 2 <= DEGEN_BLOCK_R_MM ** 2:
             return mat
     return "air"
+
+
+def degen_block_thickness(y_mm: float, z_mm: float) -> float:
+    """返回该坐标处 degeneracy 块的厚度 (mm), 无块返回 0。"""
+    for mat, yc, thk in DEGEN_BLOCKS:
+        if (y_mm - yc) ** 2 + z_mm ** 2 <= DEGEN_BLOCK_R_MM ** 2:
+            return thk
+    return 0.0
 
 
 def build_degen_truth_map(nx: int = PIXELS_X, ny: int = PIXELS_Y,

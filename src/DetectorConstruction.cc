@@ -148,6 +148,7 @@ void DetectorConstruction::BuildHPGeDetector(G4LogicalVolume* world) {
 
 	G4double R = gConfig.hpgeR;
 	G4double H = gConfig.hpgeH;
+	G4double dist = gConfig.hpgeDistance;
 	G4double dead = gConfig.hpgeDeadLayer;
 	G4double vac = gConfig.hpgeVacuumGap;
 	G4double housing = gConfig.hpgeHousingThk;
@@ -190,7 +191,9 @@ void DetectorConstruction::BuildHPGeDetector(G4LogicalVolume* world) {
 
 	// 同心多层直接放 world (轴沿 +y), 不嵌套避免越界
 	G4ThreeVector perpDir(0, 1, 0);
-	G4ThreeVector hpgePos = perpDir * gConfig.hpgeDistance;
+	// 扫描 PGAI: 整体 y 平移使准直器视场对准样品 y=hpgeCenterY 条带
+	G4ThreeVector scanOffset(0, gConfig.hpgeCenterY, 0);
+	G4ThreeVector hpgePos = perpDir * dist + scanOffset;
 	auto rotDet = new G4RotationMatrix();
 	rotDet->rotateX(90 * CLHEP::deg);  // Tubs z 轴 -> y
 	new G4PVPlacement(rotDet, hpgePos, logicHousing, "HPGeHousing", world, false, 0);

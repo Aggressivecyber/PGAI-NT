@@ -22,22 +22,24 @@ import common as C
 from build_transmission_image import primary_count_image
 
 
-def classify(A_pixel, lib, mats, use_gamma=False, G_global=None,
-             scaleA=0.6, gamma_weight=0.4):
-    """对单像素 A 值返回预测材料索引。
+def classify_mu(A_pixel, lib, mats, thickness_mm, use_gamma=False, G_global=None,
+                gamma_weight=0.4):
+    """基于 μ_n (线衰减系数, 材料属性) 分类, 修复"固定厚度库"硬伤。
 
-    fusion 距离 = |dA|/scaleA + gamma_weight * ||G_global - G_lib||
-    (两项均归一化到可比量级, gamma 仅作歧义打破)
+    μ_meas = A_pixel / thickness_mm  (该块实测线衰减)
+    匹配: argmin_m |μ_meas - μ_n_m|  (μ_n 是材料固有属性, 与厚度无关)
     """
+    mu_meas = A_pixel / max(thickness_mm, 1e-6)
     best, best_d = 0, 1e18
+    scale_mu = 0.05  # μ_n 量级 ~0.01-0.03/mm
     for idx, m in enumerate(mats):
-        dA = abs(A_pixel - lib[m]["A_n"]) / scaleA
+        dmu = abs(mu_meas - lib[m]["mu_n"]) / scale_mu
         if use_gamma and G_global is not None:
             glib = np.array(lib[m]["G"])
             dg = float(np.linalg.norm(G_global - glib)) / 2.0
-            dist = dA + gamma_weight * dg
+            dist = dmu + gamma_weight * dg
         else:
-            dist = dA
+            dist = dmu
         if dist < best_d:
             best_d, best = dist, idx
     return best
@@ -119,9 +121,15 @@ def main():
         s0 = I0[mask].sum()
         sp = Ip[mask].sum()
         A_block = -np.log(max(sp, 1e-6) / max(s0, 1.0)) if sp > 0 else 5.0
+        # 该块厚度 (从 phantom 几何真值, 用于 μ_n 匹配)
+        thick = C.degen_block_thickness(*[
+            (C.pixel_to_coord(ix, nx, C.DETECTOR_SIZE_MM),
+             C.pixel_to_coord(iy, ny, C.DETECTOR_SIZE_MM))
+            for ix in range(nx) for iy in range(ny) if truth[ix, iy] == label_idx
+        ][0][::-1]) if False else next((t for m, yc, t in C.DEGEN_BLOCKS if m == tname), 20.0)
         yt = name_to_pred[tname]
-        pn = classify(A_block, lib, mats, use_gamma=False)
-        pf = classify(A_block, lib, mats, use_gamma=True, G_global=G_global)
+        pn = classify_mu(A_block, lib, mats, thick, use_gamma=False)
+        pf = classify_mu(A_block, lib, mats, thick, use_gamma=True, G_global=G_global)
         pred_n_map[mask] = pn
         pred_f_map[mask] = pf
         n_pix = int(mask.sum())

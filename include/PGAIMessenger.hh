@@ -38,6 +38,7 @@ private:
 	G4UIcmdWithADoubleAndUnit* fCmdScintThickness;
 
 	G4UIcmdWithABool* fCmdSmearHPGe;
+	G4UIcmdWithADoubleAndUnit* fCmdHPGeCenterY;
 
 	G4UIcmdWithAString* fCmdPhantomMode;
 	G4UIcmdWithAString* fCmdSingleMaterial;

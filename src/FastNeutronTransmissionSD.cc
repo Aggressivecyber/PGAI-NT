@@ -8,6 +8,7 @@
 #include "G4VProcess.hh"
 #include "G4ThreeVector.hh"
 #include "PGAIConfig.hh"
+#include "PGAITrackInfo.hh"
 #include <cmath>
 
 FastNeutronTransmissionSD::FastNeutronTransmissionSD(const G4String& name)
@@ -59,11 +60,13 @@ G4bool FastNeutronTransmissionSD::ProcessHits(G4Step* step, G4TouchableHistory* 
 	hit->pixelX = px;
 	hit->pixelY = py;
 
-	// 初级 / 散射中子标记 (粗略, 供后处理修正)
+	// 未散射/散射中子标记 (基于 TrackInfo, 不再用 parentID==0 误判)
+	// uncollided primary = 中子 && parentID==0 && 未在 phantom 内发生强子相互作用
 	G4bool isNeutron = (hit->particleName == "neutron");
-	hit->isPrimaryNeutron = isNeutron && (hit->parentID == 0);
-	// 散射: 中子但动能明显低于源能量 (经历相互作用能量损失)
-	hit->isScatteredNeutron = isNeutron && (hit->ekin < 0.98 * gConfig.energy / MeV);
+	auto info = static_cast<PGAITrackInfo*>(track->GetUserInformation());
+	G4bool interacted = info && info->interactedInPhantom;
+	hit->isPrimaryNeutron = isNeutron && (hit->parentID == 0) && !interacted;
+	hit->isScatteredNeutron = isNeutron && interacted;
 
 	fHC->insert(hit);
 	return true;

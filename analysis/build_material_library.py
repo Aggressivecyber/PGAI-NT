@@ -59,14 +59,15 @@ def main():
         Gn = [w / total for w in wins]  # 归一化能窗比
 
         lib[mat] = {
-            "A_n": float(A_n), "thickness_mm": args.thickness_mm,
+            "A_n": float(A_n), "mu_n": float(A_n / args.thickness_mm),  # μ_n = 线衰减系数 (1/mm), 材料属性
+            "thickness_mm": args.thickness_mm,
             "n_hpge_events": int(len(e)),
             "G": [float(g) for g in Gn],
         }
-        print(f"[lib] {mat}: A_n={A_n:.4f} G={[f'{g:.3f}' for g in Gn]} n_hpge={len(e)}")
+        print(f"[lib] {mat}: A_n={A_n:.4f} mu_n={A_n/args.thickness_mm:.5f}/mm G={[f'{g:.3f}' for g in Gn]} n_hpge={len(e)}")
 
     # air: 近似无衰减
-    lib["air"] = {"A_n": 0.0, "thickness_mm": 0.0, "n_hpge_events": 0,
+    lib["air"] = {"A_n": 0.0, "mu_n": 0.0, "thickness_mm": 0.0, "n_hpge_events": 0,
                   "G": [0.0] * len(C.GAMMA_WINDOWS)}
 
     with open(C.LIBRARY / "material_library.json", "w") as f:
