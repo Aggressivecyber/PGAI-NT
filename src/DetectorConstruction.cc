@@ -71,8 +71,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	auto physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld, "World", nullptr, false, 0);
 
 	// ---- 样品台 (绕 z 轴旋转 = tomography 投影角度) ----
-	// 真实中子成像 CT: 样品旋转, 源+探测器固定。母体只包裹样品区域, 避免与探测器重叠。
-	auto solidStage = new G4Box("SampleStage", 25 * mm, 25 * mm, 25 * mm);
+	// x 半长 32 (容纳 PE 60mm 厚 x±30, 且 < detectorDistance 40 避透射屏); y/z 50 容样品
+	auto solidStage = new G4Box("SampleStage", 32 * mm, 50 * mm, 50 * mm);
 	auto logicStage = new G4LogicalVolume(solidStage, Air, "SampleStageLV");
 	logicStage->SetVisAttributes(G4VisAttributes::GetInvisible());
 	auto stageRot = new G4RotationMatrix();

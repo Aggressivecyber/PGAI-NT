@@ -38,7 +38,7 @@ RUNS = [
 
 
 def gen_macro(work: Path, mode: str, material, events: int, thickness_mm=20.0,
-              spot_mm=36.0):
+              spot_mm=55.0):
     lines = [
         f"/pgai/phantom/mode {mode}",
         f"/pgai/source/spotSize {spot_mm} mm",   # 照射野覆盖样品投影区

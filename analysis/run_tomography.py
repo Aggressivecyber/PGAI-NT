@@ -27,7 +27,7 @@ TOMO_RAW = C.RAW / "tomo"
 
 
 def gen_macro(path, mode, angle_deg, events, material=None):
-    lines = ["/pgai/source/spotSize 36 mm", f"/pgai/phantom/mode {mode}"]
+    lines = ["/pgai/source/spotSize 55 mm", f"/pgai/phantom/mode {mode}"]  # 匹配 FOV60
     if material:
         lines += [f"/pgai/phantom/singleMaterial {material}",
                   "/pgai/phantom/singleThickness 20 mm"]
@@ -80,10 +80,14 @@ def fbp_reconstruct(sinogram, angles_deg, n_out=128, det_size_mm=40.0,
     img = np.zeros((n_out, n_out))
     for i, th in enumerate(np.deg2rad(angles_deg)):
         t = X * np.sin(th) + Y * np.cos(th) + center
-        t0 = np.floor(t).astype(int)
-        w = t - t0
-        t0c = np.clip(t0, 0, n_det - 2)
-        img += filtered[i, t0c] * (1 - w) + filtered[i, t0c + 1] * w
+        # FOV 外的点贡献 0 (不 clamp 到边缘, 避免边缘波纹)
+        valid = (t >= 0) & (t < n_det - 1)
+        vals = np.zeros_like(t)
+        tv = t[valid]
+        t0 = np.floor(tv).astype(int)
+        w = tv - t0
+        vals[valid] = filtered[i, t0] * (1 - w) + filtered[i, t0 + 1] * w
+        img += vals
     img *= np.pi / n_ang
     return img
 
@@ -124,10 +128,10 @@ def main():
     for k in range(len(angs)):
         I = primary_image(TOMO_RAW / f"sample_{k:03d}", nz, nz)
         Ic = I[:, slab].sum(axis=1)
-        ratio = np.clip(Ic / np.maximum(I0c, 1.0), 1e-3, 1.0)
-        A = -np.log(ratio)
-        A[I0c < 50] = 0.0            # 屏蔽低统计像素 (否则 A 爆炸)
-        A = np.clip(A, 0.0, 2.5)     # 合理衰减上限
+        # 放宽裁剪: 允许小负衰减(ratio>1)存在, 仅屏蔽极低统计, 不硬截断上限
+        ratio = Ic / np.maximum(I0c, 1e-9)
+        A = -np.log(np.clip(ratio, 1e-6, 10.0))
+        A[I0c < 20] = 0.0           # 仅极低统计像素屏蔽
         sino[k] = A
 
     np.save(C.IMAGES / f"sinogram_{args.tag}.npy", sino)

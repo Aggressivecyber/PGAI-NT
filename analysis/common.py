@@ -34,7 +34,7 @@ HPGE_COLS = [
 ]
 
 # ---- 几何参数 (须与 PGAIConfig 默认一致) ----
-DETECTOR_SIZE_MM = 40.0
+DETECTOR_SIZE_MM = 60.0
 PIXELS_X = 128
 PIXELS_Y = 128
 

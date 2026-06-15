@@ -17,7 +17,7 @@ struct PGAIConfig {
 	G4int pixelsX = 128;
 	G4int pixelsY = 128;
 	G4double scintThickness = 10.0 * mm;
-	G4double detectorSize = 40.0 * mm;   // 正方形平面全边长
+	G4double detectorSize = 60.0 * mm;   // 正方形平面全边长 (样品占 ~67% FOV, 避免截断)
 	G4double detectorDistance = 40.0 * mm;
 	G4double screenWindowThk = 1.0 * mm; // Al 入/出射窗厚度
 	G4double screenFrame = 2.0 * mm;     // Al 框架边宽
