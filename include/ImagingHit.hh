@@ -31,6 +31,11 @@ public:
 	G4double ekin{0};          // MeV (step 中点)
 	G4bool isPrimaryNeutron{false};
 	G4bool isScatteredNeutron{false};
+	// 方向 (诊断 + 前向门控)
+	G4double dirX{0};
+	G4double dirY{0};
+	G4double dirZ{0};
+	G4bool isUncollidedPrimary{false};  // parentID==0 && 未在 phantom 交互 && 前向 && 近源能量
 };
 
 using TransmissionHitsCollection = G4THitsCollection<ImagingHit>;

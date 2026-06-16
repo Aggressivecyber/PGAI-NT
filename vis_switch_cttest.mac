@@ -1,0 +1,12 @@
+# Switch an already-open interactive viewer to the six-small-cylinder CT target.
+/pgai/source/spotSize 65 mm
+/pgai/source/centerY 0 mm
+/pgai/source/centerZ 0 mm
+/pgai/phantom/mode cttest
+/pgai/hpge/centerY 0 mm
+/pgai/hpge/centerZ 0 mm
+/run/reinitializeGeometry
+/vis/drawVolume
+/vis/viewer/set/viewpointVector 0 0 1
+/vis/viewer/zoom 1.4
+/vis/viewer/refresh

@@ -1,0 +1,3 @@
+# Look along +y: source is left (-x), transmission screen is right (+x), HPGe shifts in z.
+/vis/viewer/set/viewpointVector 0 1 0
+/vis/viewer/refresh

@@ -37,6 +37,16 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 	fCmdSpotSize->SetParameterName("spot", false);
 	fCmdSpotSize->SetDefaultUnit("mm");
 
+	fCmdSourceCenterY = new G4UIcmdWithADoubleAndUnit("/pgai/source/centerY", this);
+	fCmdSourceCenterY->SetGuidance("Thin-beam scan center y at the sample plane");
+	fCmdSourceCenterY->SetParameterName("cy", false);
+	fCmdSourceCenterY->SetDefaultUnit("mm");
+
+	fCmdSourceCenterZ = new G4UIcmdWithADoubleAndUnit("/pgai/source/centerZ", this);
+	fCmdSourceCenterZ->SetGuidance("Thin-beam scan center z at the sample plane");
+	fCmdSourceCenterZ->SetParameterName("cz", false);
+	fCmdSourceCenterZ->SetDefaultUnit("mm");
+
 	fCmdDivergence = new G4UIcmdWithADoubleAndUnit("/pgai/source/divergence", this);
 	fCmdDivergence->SetGuidance("Angular divergence (1-sigma)");
 	fCmdDivergence->SetParameterName("div", false);
@@ -57,11 +67,15 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 	fCmdHPGeCenterY->SetGuidance("Scanning PGAI: collimator view center y (scan sample strips)");
 	fCmdHPGeCenterY->SetParameterName("cy", false);
 	fCmdHPGeCenterY->SetDefaultUnit("mm");
+	fCmdHPGeCenterZ = new G4UIcmdWithADoubleAndUnit("/pgai/hpge/centerZ", this);
+	fCmdHPGeCenterZ->SetGuidance("Scanning PGAI: collimator view center z (scan sample slices)");
+	fCmdHPGeCenterZ->SetParameterName("cz", false);
+	fCmdHPGeCenterZ->SetDefaultUnit("mm");
 
 	fCmdPhantomMode = new G4UIcmdWithAString("/pgai/phantom/mode", this);
-	fCmdPhantomMode->SetGuidance("empty | single | degeneracy | steel");
+	fCmdPhantomMode->SetGuidance("empty | single | calibration_block | degeneracy | steel | cttest | gradient_cylinder");
 	fCmdPhantomMode->SetParameterName("mode", false);
-	fCmdPhantomMode->SetCandidates("empty single degeneracy steel cttest");
+	fCmdPhantomMode->SetCandidates("empty single calibration_block degeneracy steel cttest gradient_cylinder");
 
 	fCmdSingleMaterial = new G4UIcmdWithAString("/pgai/phantom/singleMaterial", this);
 	fCmdSingleMaterial->SetParameterName("mat", false);
@@ -78,10 +92,12 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 }
 
 PGAIMessenger::~PGAIMessenger() {
-	delete fCmdEnergy; delete fCmdEnergySpread; delete fCmdSpotSize; delete fCmdDivergence;
+	delete fCmdEnergy; delete fCmdEnergySpread; delete fCmdSpotSize;
+	delete fCmdSourceCenterY; delete fCmdSourceCenterZ; delete fCmdDivergence;
 	delete fCmdPixelsX; delete fCmdPixelsY; delete fCmdScintThickness;
 	delete fCmdSmearHPGe;
 	delete fCmdHPGeCenterY;
+	delete fCmdHPGeCenterZ;
 	delete fCmdPhantomMode; delete fCmdSingleMaterial; delete fCmdSingleThickness;
 	delete fCmdAngle;
 	delete fDir; delete fDirSource; delete fDirDet; delete fDirHPGe; delete fDirPhantom; delete fDirRun;
@@ -91,12 +107,15 @@ void PGAIMessenger::SetNewValue(G4UIcommand* cmd, G4String value) {
 	if (cmd == fCmdEnergy)           gConfig.energy = fCmdEnergy->GetNewDoubleValue(value);
 	else if (cmd == fCmdEnergySpread) gConfig.energySpread = fCmdEnergySpread->GetNewDoubleValue(value);
 	else if (cmd == fCmdSpotSize)    gConfig.spotSize = fCmdSpotSize->GetNewDoubleValue(value);
+	else if (cmd == fCmdSourceCenterY) gConfig.sourceCenterY = fCmdSourceCenterY->GetNewDoubleValue(value);
+	else if (cmd == fCmdSourceCenterZ) gConfig.sourceCenterZ = fCmdSourceCenterZ->GetNewDoubleValue(value);
 	else if (cmd == fCmdDivergence)  gConfig.divergence = fCmdDivergence->GetNewDoubleValue(value);
 	else if (cmd == fCmdPixelsX)     gConfig.pixelsX = fCmdPixelsX->GetNewIntValue(value);
 	else if (cmd == fCmdPixelsY)     gConfig.pixelsY = fCmdPixelsY->GetNewIntValue(value);
 	else if (cmd == fCmdScintThickness) gConfig.scintThickness = fCmdScintThickness->GetNewDoubleValue(value);
 	else if (cmd == fCmdSmearHPGe)   gConfig.smearHPGe = fCmdSmearHPGe->GetNewBoolValue(value);
 	else if (cmd == fCmdHPGeCenterY) gConfig.hpgeCenterY = fCmdHPGeCenterY->GetNewDoubleValue(value);
+	else if (cmd == fCmdHPGeCenterZ) gConfig.hpgeCenterZ = fCmdHPGeCenterZ->GetNewDoubleValue(value);
 	else if (cmd == fCmdPhantomMode) gConfig.phantomMode = value;
 	else if (cmd == fCmdSingleMaterial) gConfig.singleMaterial = value;
 	else if (cmd == fCmdSingleThickness) gConfig.singleThickness = fCmdSingleThickness->GetNewDoubleValue(value);

@@ -68,6 +68,15 @@ G4bool FastNeutronTransmissionSD::ProcessHits(G4Step* step, G4TouchableHistory* 
 	hit->isPrimaryNeutron = isNeutron && (hit->parentID == 0) && !interacted;
 	hit->isScatteredNeutron = isNeutron && interacted;
 
+	// 方向 + 严格未碰撞门控 (前向 + 近源能量)
+	G4ThreeVector dir = pre->GetMomentumDirection();
+	hit->dirX = dir.x();
+	hit->dirY = dir.y();
+	hit->dirZ = dir.z();
+	G4bool forward = dir.x() > 0.999;
+	G4bool nearE = std::abs(hit->ekin - gConfig.energy / MeV) < 0.05;
+	hit->isUncollidedPrimary = hit->isPrimaryNeutron && forward && nearE;
+
 	fHC->insert(hit);
 	return true;
 }

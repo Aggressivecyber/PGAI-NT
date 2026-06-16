@@ -67,6 +67,10 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 				man->FillNtupleDColumn(0, 14, h->localPos.z());
 				man->FillNtupleIColumn(0, 15, h->isPrimaryNeutron ? 1 : 0);
 				man->FillNtupleIColumn(0, 16, h->isScatteredNeutron ? 1 : 0);
+				man->FillNtupleDColumn(0, 17, h->dirX);
+				man->FillNtupleDColumn(0, 18, h->dirY);
+				man->FillNtupleDColumn(0, 19, h->dirZ);
+				man->FillNtupleIColumn(0, 20, h->isUncollidedPrimary ? 1 : 0);
 				man->AddNtupleRow(0);
 			}
 		}

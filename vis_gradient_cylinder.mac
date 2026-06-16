@@ -1,13 +1,7 @@
-# Full startup visualization for the 3D concentration scan geometry.
-# Use by copying this file to vis.mac, then launching ./build/NT with no args.
-/run/verbose 0
-/event/verbose 0
-/tracking/verbose 0
-/tracking/storeTrajectory 1
 /pgai/source/spotSize 65 mm
 /pgai/phantom/mode gradient_cylinder
-/pgai/hpge/centerY 12 mm
-/pgai/hpge/centerZ -12 mm
+/pgai/hpge/centerY 0 mm
+/pgai/hpge/centerZ 0 mm
 /run/initialize
 /vis/open OGL
 /vis/drawVolume
@@ -18,8 +12,6 @@
 /vis/viewer/set/background white 1.0
 /vis/viewer/set/style surface
 /vis/viewer/set/auxiliaryEdge true
-/vis/viewer/set/viewpointVector 0 0 1
-/vis/viewer/zoom 1.1
+/vis/viewer/set/viewpointVector 0 1 0
+/vis/viewer/zoom 1.2
 /vis/viewer/set/autoRefresh true
-/run/beamOn 20
-/vis/viewer/refresh

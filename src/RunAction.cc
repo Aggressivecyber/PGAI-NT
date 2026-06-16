@@ -26,6 +26,10 @@ RunAction::RunAction() : G4UserRunAction() {
 	man->CreateNtupleDColumn("local_z_mm");
 	man->CreateNtupleIColumn("is_primary_neutron");
 	man->CreateNtupleIColumn("is_scattered_neutron");
+	man->CreateNtupleDColumn("dir_x");
+	man->CreateNtupleDColumn("dir_y");
+	man->CreateNtupleDColumn("dir_z");
+	man->CreateNtupleIColumn("is_uncollided_primary");
 	man->FinishNtuple();
 
 	// ntuple 1: HPGe event-level 能谱

@@ -1,0 +1,3 @@
+# Look along +x beam direction: inspect sample plane and y/z scan offset.
+/vis/viewer/set/viewpointVector 1 0 0
+/vis/viewer/refresh

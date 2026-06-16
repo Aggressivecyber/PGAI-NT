@@ -1,0 +1,12 @@
+# Switch an already-open interactive viewer to the offset gradient-cylinder scan.
+/pgai/source/spotSize 2 mm
+/pgai/source/centerY 12 mm
+/pgai/source/centerZ -12 mm
+/pgai/phantom/mode gradient_cylinder
+/pgai/hpge/centerY 12 mm
+/pgai/hpge/centerZ -12 mm
+/run/reinitializeGeometry
+/vis/drawVolume
+/vis/viewer/set/viewpointVector 0 0 1
+/vis/viewer/zoom 1.1
+/vis/viewer/refresh

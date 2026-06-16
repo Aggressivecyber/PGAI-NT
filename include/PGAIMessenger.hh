@@ -31,6 +31,8 @@ private:
 	G4UIcmdWithADoubleAndUnit* fCmdEnergy;
 	G4UIcmdWithADouble* fCmdEnergySpread;
 	G4UIcmdWithADoubleAndUnit* fCmdSpotSize;
+	G4UIcmdWithADoubleAndUnit* fCmdSourceCenterY;
+	G4UIcmdWithADoubleAndUnit* fCmdSourceCenterZ;
 	G4UIcmdWithADoubleAndUnit* fCmdDivergence;
 
 	G4UIcmdWithAnInteger* fCmdPixelsX;
@@ -39,6 +41,7 @@ private:
 
 	G4UIcmdWithABool* fCmdSmearHPGe;
 	G4UIcmdWithADoubleAndUnit* fCmdHPGeCenterY;
+	G4UIcmdWithADoubleAndUnit* fCmdHPGeCenterZ;
 
 	G4UIcmdWithAString* fCmdPhantomMode;
 	G4UIcmdWithAString* fCmdSingleMaterial;

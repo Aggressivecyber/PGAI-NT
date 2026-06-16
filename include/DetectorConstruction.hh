@@ -37,9 +37,11 @@ private:
 	void BuildPhantom(G4LogicalVolume* world);
 	void BuildEmptyPhantom(G4LogicalVolume* world);
 	void BuildSingleMaterialPhantom(G4LogicalVolume* world);
+	void BuildCalibrationBlockPhantom(G4LogicalVolume* world);
 	void BuildMaterialDegeneracyPhantom(G4LogicalVolume* world);
 	void BuildSteelShellHydrogenPhantom(G4LogicalVolume* world);
 	void BuildCTTestPhantom(G4LogicalVolume* world);
+	void BuildGradientCylinderPhantom(G4LogicalVolume* world);
 
 	// 束流系统绕 z 轴的旋转 (实现投影角度)
 	G4RotationMatrix* BeamRotation();

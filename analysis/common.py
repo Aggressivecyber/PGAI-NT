@@ -26,6 +26,7 @@ TRANSMISSION_COLS = [
     "time_ns", "particle_name", "track_id", "parent_id", "creator_process",
     "kinetic_energy_MeV", "local_x_mm", "local_y_mm", "local_z_mm",
     "is_primary_neutron", "is_scattered_neutron",
+    "dir_x", "dir_y", "dir_z", "is_uncollided_primary",
 ]
 HPGE_COLS = [
     "run_id", "event_id", "angle_deg", "total_edep_keV", "n_steps",
@@ -34,7 +35,7 @@ HPGE_COLS = [
 ]
 
 # ---- 几何参数 (须与 PGAIConfig 默认一致) ----
-DETECTOR_SIZE_MM = 60.0
+DETECTOR_SIZE_MM = 70.0
 PIXELS_X = 128
 PIXELS_Y = 128
 

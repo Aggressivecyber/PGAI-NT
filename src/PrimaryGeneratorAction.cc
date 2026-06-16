@@ -33,8 +33,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
 	G4double dy = (G4UniformRand() - 0.5) * 2.0 * half;
 	G4double dz = (G4UniformRand() - 0.5) * 2.0 * half;
 
-	// 源位置: (-sourceDistance,0,0) + 源斑偏移
-	G4ThreeVector srcPos(-gConfig.sourceDistance, 0, 0);
+	// 源位置: (-sourceDistance, centerY, centerZ) + 源斑偏移
+	G4ThreeVector srcPos(-gConfig.sourceDistance, gConfig.sourceCenterY, gConfig.sourceCenterZ);
 	srcPos += perpY * dy + perpZ * dz;
 
 	// 角发散: 方向加高斯抖动
