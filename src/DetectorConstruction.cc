@@ -350,21 +350,21 @@ void DetectorConstruction::BuildSteelShellHydrogenPhantom(G4LogicalVolume* world
 	}
 }
 
-// ===================== CT 测试件: PMMA 大圆柱 + 环绕 6 材料小圆柱 (全轴沿 z) =====================
+// ===================== CT 测试件: Al 大圆柱 + 环绕 6 材料小圆柱 (全轴沿 z) =====================
 // 标准 2D 平行束 CT 几何: 所有特征轴沿旋转轴 z, z 切片重建无模糊。
 // 一次成像即可测试 PE/Al/Fe/Cu/Pb/Ni 多材料 + PGAI-NT 调试。
 void DetectorConstruction::BuildCTTestPhantom(G4LogicalVolume* world) {
-	auto PMMA = G4Material::GetMaterial("G4_PLEXIGLASS");
+	auto Al = G4Material::GetMaterial("G4_Al");
 
 	G4double Rbig = 28 * mm;     // 大圆柱半径 (FOV70 下样品直径占 ~80%)
 	G4double H = 40 * mm;        // 高度 (z 方向)
 	G4double Rring = 16.5 * mm;  // 小圆柱环绕半径 (16.5+7=23.5 < 28)
 	G4double Rsmall = 7 * mm;    // 小圆柱半径
 
-	// PMMA 背景大圆柱 (轴沿 z, G4Tubs 默认)
+	// Al 外壳/背景大圆柱 (轴沿 z, G4Tubs 默认)
 	auto solidBig = new G4Tubs("CTPhantom", 0, Rbig, H * 0.5, 0, 2 * CLHEP::pi);
-	auto logicBig = new G4LogicalVolume(solidBig, PMMA, "CTPhantomLV");
-	logicBig->SetVisAttributes(new G4VisAttributes(G4Colour(0.9, 0.9, 0.92, 0.5)));
+	auto logicBig = new G4LogicalVolume(solidBig, Al, "CTPhantomLV");
+	logicBig->SetVisAttributes(new G4VisAttributes(G4Colour(0.78, 0.78, 0.82, 0.5)));
 	new G4PVPlacement(nullptr, G4ThreeVector(), logicBig, "CTPhantom", world, false, 0, true);
 
 	// 6 种材料小圆柱环绕 (60° 间隔), 轴沿 z, 同高度

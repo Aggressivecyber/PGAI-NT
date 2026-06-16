@@ -80,6 +80,13 @@ def test_cttest_phantom_fills_about_80_percent_of_fov() -> None:
     assert r_ring + r_small < r_big
 
 
+def test_cttest_outer_cylinder_uses_aluminum_shell() -> None:
+    detector = _read("src/DetectorConstruction.cc")
+
+    assert 'auto Al = G4Material::GetMaterial("G4_Al")' in detector
+    assert 'new G4LogicalVolume(solidBig, Al, "CTPhantomLV")' in detector
+
+
 def test_hpge_scan_supports_yz_and_moves_collimator_with_detector() -> None:
     config = _read("include/PGAIConfig.hh")
     header = _read("include/PGAIMessenger.hh")
@@ -226,6 +233,7 @@ def test_prompt_gamma_cone_bias_is_configurable_and_changes_gamma_direction() ->
 if __name__ == "__main__":
     test_rotating_sample_stage_never_overlaps_transmission_screen()
     test_cttest_phantom_fills_about_80_percent_of_fov()
+    test_cttest_outer_cylinder_uses_aluminum_shell()
     test_hpge_scan_supports_yz_and_moves_collimator_with_detector()
     test_source_beam_center_can_follow_hpge_scan_point()
     test_gradient_cylinder_phantom_mode_is_available()

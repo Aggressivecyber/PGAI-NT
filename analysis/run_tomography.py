@@ -26,9 +26,11 @@ NT = ROOT / "build" / "NT"
 TOMO_RAW = C.RAW / "tomo"
 
 
-def gen_macro(path, mode, angle_deg, events, material=None, threads=16):
+def gen_macro(path, mode, angle_deg, events, material=None, threads=16,
+              energy=0.00405, energy_unit="eV"):
     lines = [
         f"/run/numberOfThreads {threads}",
+        f"/pgai/source/energy {energy:g} {energy_unit}",
         "/pgai/source/spotSize 65 mm",
         f"/pgai/phantom/mode {mode}",
     ]  # 匹配 FOV70
@@ -39,12 +41,14 @@ def gen_macro(path, mode, angle_deg, events, material=None, threads=16):
     path.write_text("\n".join(lines) + "\n")
 
 
-def run_sim(tag, mode, angle_deg, events, material=None, raw_root=TOMO_RAW, threads=16):
+def run_sim(tag, mode, angle_deg, events, material=None, raw_root=TOMO_RAW,
+            threads=16, energy=0.00405, energy_unit="eV"):
     work = Path(raw_root) / tag
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
-    gen_macro(work / "run.mac", mode, angle_deg, events, material, threads=threads)
+    gen_macro(work / "run.mac", mode, angle_deg, events, material,
+              threads=threads, energy=energy, energy_unit=energy_unit)
     with open(work / "log.txt", "w") as lf:
         subprocess.run([str(NT), "run.mac"], cwd=work, stdout=lf, stderr=subprocess.STDOUT, check=True)
 
@@ -278,6 +282,8 @@ def main():
     ap.add_argument("--tv-iters", type=int, default=1, help="每轮 SART 后的 TV 去噪步数")
     ap.add_argument("--tag", default="tomo", help="输出文件标签")
     ap.add_argument("--threads", type=int, default=16)
+    ap.add_argument("--source-energy", type=float, default=0.00405)
+    ap.add_argument("--source-energy-unit", default="eV")
     ap.add_argument("--raw-root", type=Path, default=TOMO_RAW,
                     help="raw projection directory; contains empty and sample_###")
     ap.add_argument("--skip-sim", action="store_true")
@@ -292,12 +298,15 @@ def main():
     if not args.skip_sim:
         # empty (I0, angle 无关, 跑一次)
         print(f"=== empty I0 (一次) ===")
-        run_sim("empty", "empty", 0, args.events, raw_root=args.raw_root, threads=args.threads)
+        run_sim("empty", "empty", 0, args.events, raw_root=args.raw_root,
+                threads=args.threads, energy=args.source_energy,
+                energy_unit=args.source_energy_unit)
         # 每角度 sample
         for k, a in enumerate(angs):
             print(f"=== sample angle {a:.1f}° ({k+1}/{len(angs)}) ===")
             run_sim(f"sample_{k:03d}", args.mode, a, args.events, args.material,
-                    raw_root=args.raw_root, threads=args.threads)
+                    raw_root=args.raw_root, threads=args.threads,
+                    energy=args.source_energy, energy_unit=args.source_energy_unit)
 
     I0 = primary_image(args.raw_root / "empty", nz, nz)
     # z 中心切片: 对轴向均匀的 cttest 聚合整根棒高度；其他 phantom 保持薄切片。

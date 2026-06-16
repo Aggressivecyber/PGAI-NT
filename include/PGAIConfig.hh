@@ -6,8 +6,8 @@
 
 // 全局仿真配置 — 由 PGAIMessenger (宏命令) 或环境变量修改, 各模块读取。
 struct PGAIConfig {
-	// ---- 源 (4.05 MeV 准单能快中子) ----
-	G4double energy = 4.05 * MeV;
+	// ---- 源 (4.05 meV 热/冷中子) ----
+	G4double energy = 4.05e-3 * eV;
 	G4double energySpread = 0.0;      // 分数 1-sigma (0.03 = 3%)
 	G4double spotSize = 1.0 * mm;    // 源斑直径 (均匀方斑半宽 = spotSize/2)
 	G4double sourceCenterY = 0.0 * mm;

@@ -4,7 +4,9 @@
 /event/verbose 0
 /tracking/verbose 0
 /tracking/storeTrajectory 1
-/pgai/source/spotSize 65 mm
+/pgai/source/spotSize 2 mm
+/pgai/source/centerY 12 mm
+/pgai/source/centerZ -12 mm
 /pgai/phantom/mode gradient_cylinder
 /pgai/hpge/centerY 12 mm
 /pgai/hpge/centerZ -12 mm

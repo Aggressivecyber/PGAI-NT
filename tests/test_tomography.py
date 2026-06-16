@@ -49,10 +49,12 @@ def test_cttest_uses_thicker_slab_to_accumulate_axial_statistics() -> None:
 def test_tomography_macro_sets_threads_and_gradient_mode() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "run.mac"
-        gen_macro(path, "gradient_cylinder", 45.0, 12345, threads=12)
+        gen_macro(path, "gradient_cylinder", 45.0, 12345,
+                  threads=12, energy=0.00405, energy_unit="eV")
         text = path.read_text()
 
     assert "/run/numberOfThreads 12" in text
+    assert "/pgai/source/energy 0.00405 eV" in text
     assert "/pgai/source/spotSize 65 mm" in text
     assert "/pgai/phantom/mode gradient_cylinder" in text
     assert "/pgai/run/angle 45 deg" in text

@@ -57,6 +57,18 @@ def test_write_macro_set_enables_prompt_gamma_cone_bias_by_default() -> None:
         assert "/pgai/bias/gammaConeAngle 10 deg" in text
 
 
+def test_write_macro_set_can_set_thermal_neutron_energy() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        write_macro_set(root, mode="gradient_cylinder",
+                        points=[(0.0, 0.0)], events=50, threads=2,
+                        source_energy=0.00405, source_energy_unit="eV")
+        text = (root / "pt_y0_z0" / "run.mac").read_text()
+
+    assert "/pgai/source/energy 0.00405 eV" in text
+    assert "/run/beamOn 50" in text
+
+
 def test_write_full_macro_tree_passes_prompt_gamma_bias_options() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -183,6 +195,7 @@ if __name__ == "__main__":
     test_format_point_name_is_stable_for_negative_coordinates()
     test_write_macro_set_aligns_fine_beam_and_hpge_centers()
     test_write_macro_set_enables_prompt_gamma_cone_bias_by_default()
+    test_write_macro_set_can_set_thermal_neutron_energy()
     test_write_full_macro_tree_passes_prompt_gamma_bias_options()
     test_hpge_signal_prefers_sample_gamma_deposit_when_available()
     test_hpge_signal_does_not_fallback_when_new_sample_column_is_zero()

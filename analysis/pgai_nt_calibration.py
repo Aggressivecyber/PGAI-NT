@@ -59,7 +59,9 @@ def write_macro_set(root: Path | str,
                     material: str | None = None,
                     spot_size_mm: float = 2.0,
                     gamma_cone_bias: bool = True,
-                    gamma_cone_angle_deg: float = 10.0) -> list[Path]:
+                    gamma_cone_angle_deg: float = 10.0,
+                    source_energy: float = 0.00405,
+                    source_energy_unit: str = "eV") -> list[Path]:
     root = Path(root)
     paths = []
     for y_mm, z_mm in points:
@@ -70,6 +72,7 @@ def write_macro_set(root: Path | str,
             "/run/verbose 0",
             "/event/verbose 0",
             "/tracking/verbose 0",
+            f"/pgai/source/energy {source_energy:g} {source_energy_unit}",
             f"/pgai/source/spotSize {spot_size_mm:g} mm",
             f"/pgai/source/centerY {y_mm:g} mm",
             f"/pgai/source/centerZ {z_mm:g} mm",
@@ -96,7 +99,9 @@ def write_full_macro_tree(root: Path | str,
                           threads: int = 16,
                           points: list[tuple[float, float]] = DEFAULT_POINTS,
                           gamma_cone_bias: bool = True,
-                          gamma_cone_angle_deg: float = 10.0) -> dict[str, Path]:
+                          gamma_cone_angle_deg: float = 10.0,
+                          source_energy: float = 0.00405,
+                          source_energy_unit: str = "eV") -> dict[str, Path]:
     root = Path(root)
     paths = {
         "empty": root / "empty",
@@ -105,18 +110,24 @@ def write_full_macro_tree(root: Path | str,
     write_macro_set(paths["empty"], mode="empty", points=points,
                     events=events, threads=threads,
                     gamma_cone_bias=gamma_cone_bias,
-                    gamma_cone_angle_deg=gamma_cone_angle_deg)
+                    gamma_cone_angle_deg=gamma_cone_angle_deg,
+                    source_energy=source_energy,
+                    source_energy_unit=source_energy_unit)
     write_macro_set(paths["gradient"], mode="gradient_cylinder", points=points,
                     events=events, threads=threads,
                     gamma_cone_bias=gamma_cone_bias,
-                    gamma_cone_angle_deg=gamma_cone_angle_deg)
+                    gamma_cone_angle_deg=gamma_cone_angle_deg,
+                    source_energy=source_energy,
+                    source_energy_unit=source_energy_unit)
     for material in DEFAULT_MATERIALS:
         key = f"cal_{material}"
         paths[key] = root / key
         write_macro_set(paths[key], mode="calibration_block", material=material,
                         points=points, events=events, threads=threads,
                         gamma_cone_bias=gamma_cone_bias,
-                        gamma_cone_angle_deg=gamma_cone_angle_deg)
+                        gamma_cone_angle_deg=gamma_cone_angle_deg,
+                        source_energy=source_energy,
+                        source_energy_unit=source_energy_unit)
     return paths
 
 
@@ -444,6 +455,8 @@ def main() -> None:
     p_write.add_argument("--events", type=int, default=100000)
     p_write.add_argument("--threads", type=int, default=16)
     p_write.add_argument("--points", type=float, nargs="*")
+    p_write.add_argument("--source-energy", type=float, default=0.00405)
+    p_write.add_argument("--source-energy-unit", default="eV")
     p_write.add_argument("--gamma-cone-angle", type=float, default=10.0,
                          help="prompt-gamma cone-bias half-angle in degrees")
     p_write.add_argument("--disable-gamma-cone-bias", action="store_true",
@@ -466,6 +479,8 @@ def main() -> None:
     p_all.add_argument("--points", type=float, nargs="*")
     p_all.add_argument("--output-prefix", default="pgai_nt")
     p_all.add_argument("--keep-existing", action="store_true")
+    p_all.add_argument("--source-energy", type=float, default=0.00405)
+    p_all.add_argument("--source-energy-unit", default="eV")
     p_all.add_argument("--gamma-cone-angle", type=float, default=10.0,
                        help="prompt-gamma cone-bias half-angle in degrees")
     p_all.add_argument("--disable-gamma-cone-bias", action="store_true",
@@ -477,7 +492,9 @@ def main() -> None:
         write_full_macro_tree(args.root, events=args.events, threads=args.threads,
                               points=_parse_points(args.points),
                               gamma_cone_bias=not args.disable_gamma_cone_bias,
-                              gamma_cone_angle_deg=args.gamma_cone_angle)
+                              gamma_cone_angle_deg=args.gamma_cone_angle,
+                              source_energy=args.source_energy,
+                              source_energy_unit=args.source_energy_unit)
         print(f"[pgai-nt] macros written -> {args.root}")
     elif args.cmd == "run":
         run_macro_tree(args.root, groups=args.groups)
@@ -492,7 +509,9 @@ def main() -> None:
         write_full_macro_tree(args.root, events=args.events, threads=args.threads,
                               points=_parse_points(args.points),
                               gamma_cone_bias=not args.disable_gamma_cone_bias,
-                              gamma_cone_angle_deg=args.gamma_cone_angle)
+                              gamma_cone_angle_deg=args.gamma_cone_angle,
+                              source_energy=args.source_energy,
+                              source_energy_unit=args.source_energy_unit)
         run_macro_tree(args.root)
         summary = analyze_run_tree(args.root, output_prefix=args.output_prefix,
                                    points=_parse_points(args.points))
