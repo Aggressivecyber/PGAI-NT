@@ -21,6 +21,7 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 	fDirDet    = new G4UIdirectory("/pgai/detector/");
 	fDirHPGe   = new G4UIdirectory("/pgai/hpge/");
 	fDirPhantom= new G4UIdirectory("/pgai/phantom/");
+	fDirBias   = new G4UIdirectory("/pgai/bias/");
 	fDirRun    = new G4UIdirectory("/pgai/run/");
 
 	fCmdEnergy = new G4UIcmdWithADoubleAndUnit("/pgai/source/energy", this);
@@ -72,6 +73,13 @@ PGAIMessenger::PGAIMessenger(DetectorConstruction* det) : fDet(det) {
 	fCmdHPGeCenterZ->SetParameterName("cz", false);
 	fCmdHPGeCenterZ->SetDefaultUnit("mm");
 
+	fCmdGammaConeBias = new G4UIcmdWithABool("/pgai/bias/gammaCone", this);
+	fCmdGammaConeBias->SetGuidance("Enable cone-biased sample-born prompt gamma directions toward HPGe");
+	fCmdGammaConeBiasAngle = new G4UIcmdWithADoubleAndUnit("/pgai/bias/gammaConeAngle", this);
+	fCmdGammaConeBiasAngle->SetGuidance("Half-angle for prompt gamma cone bias");
+	fCmdGammaConeBiasAngle->SetParameterName("angle", false);
+	fCmdGammaConeBiasAngle->SetDefaultUnit("deg");
+
 	fCmdPhantomMode = new G4UIcmdWithAString("/pgai/phantom/mode", this);
 	fCmdPhantomMode->SetGuidance("empty | single | calibration_block | degeneracy | steel | cttest | gradient_cylinder");
 	fCmdPhantomMode->SetParameterName("mode", false);
@@ -98,9 +106,11 @@ PGAIMessenger::~PGAIMessenger() {
 	delete fCmdSmearHPGe;
 	delete fCmdHPGeCenterY;
 	delete fCmdHPGeCenterZ;
+	delete fCmdGammaConeBias;
+	delete fCmdGammaConeBiasAngle;
 	delete fCmdPhantomMode; delete fCmdSingleMaterial; delete fCmdSingleThickness;
 	delete fCmdAngle;
-	delete fDir; delete fDirSource; delete fDirDet; delete fDirHPGe; delete fDirPhantom; delete fDirRun;
+	delete fDir; delete fDirSource; delete fDirDet; delete fDirHPGe; delete fDirPhantom; delete fDirBias; delete fDirRun;
 }
 
 void PGAIMessenger::SetNewValue(G4UIcommand* cmd, G4String value) {
@@ -116,6 +126,8 @@ void PGAIMessenger::SetNewValue(G4UIcommand* cmd, G4String value) {
 	else if (cmd == fCmdSmearHPGe)   gConfig.smearHPGe = fCmdSmearHPGe->GetNewBoolValue(value);
 	else if (cmd == fCmdHPGeCenterY) gConfig.hpgeCenterY = fCmdHPGeCenterY->GetNewDoubleValue(value);
 	else if (cmd == fCmdHPGeCenterZ) gConfig.hpgeCenterZ = fCmdHPGeCenterZ->GetNewDoubleValue(value);
+	else if (cmd == fCmdGammaConeBias) gConfig.gammaConeBias = fCmdGammaConeBias->GetNewBoolValue(value);
+	else if (cmd == fCmdGammaConeBiasAngle) gConfig.gammaConeBiasAngle = fCmdGammaConeBiasAngle->GetNewDoubleValue(value);
 	else if (cmd == fCmdPhantomMode) gConfig.phantomMode = value;
 	else if (cmd == fCmdSingleMaterial) gConfig.singleMaterial = value;
 	else if (cmd == fCmdSingleThickness) gConfig.singleThickness = fCmdSingleThickness->GetNewDoubleValue(value);

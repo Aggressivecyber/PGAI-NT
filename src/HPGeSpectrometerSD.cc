@@ -6,6 +6,7 @@
 #include "G4Track.hh"
 #include "G4VProcess.hh"
 #include "G4SystemOfUnits.hh"
+#include "PGAITrackInfo.hh"
 
 HPGeSpectrometerSD::HPGeSpectrometerSD(const G4String& name)
 	: G4VSensitiveDetector(name) {
@@ -33,6 +34,15 @@ G4bool HPGeSpectrometerSD::ProcessHits(G4Step* step, G4TouchableHistory* /*histo
 	hit->ekin = pre->GetKineticEnergy() / MeV;
 	const G4VProcess* creator = track->GetCreatorProcess();
 	hit->creatorProcess = creator ? creator->GetProcessName() : "primary";
+	const auto* info = static_cast<const PGAITrackInfo*>(track->GetUserInformation());
+	hit->fromPhantomGamma = info && info->bornInPhantom;
+	hit->sampleGammaEdep = hit->fromPhantomGamma ? edep : 0.0;
+	if (info) {
+		hit->sourceGammaEnergyKeV = info->sourceGammaEnergyKeV;
+		hit->sampleGammaBiasWeight = info->sourceBiasWeight;
+		hit->sourceMaterial = info->sourceMaterial;
+		hit->sourceProcess = info->sourceProcess;
+	}
 
 	fHC->insert(hit);
 	return true;

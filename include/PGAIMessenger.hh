@@ -26,6 +26,7 @@ private:
 	G4UIdirectory* fDirDet;
 	G4UIdirectory* fDirHPGe;
 	G4UIdirectory* fDirPhantom;
+	G4UIdirectory* fDirBias;
 	G4UIdirectory* fDirRun;
 
 	G4UIcmdWithADoubleAndUnit* fCmdEnergy;
@@ -42,6 +43,9 @@ private:
 	G4UIcmdWithABool* fCmdSmearHPGe;
 	G4UIcmdWithADoubleAndUnit* fCmdHPGeCenterY;
 	G4UIcmdWithADoubleAndUnit* fCmdHPGeCenterZ;
+
+	G4UIcmdWithABool* fCmdGammaConeBias;
+	G4UIcmdWithADoubleAndUnit* fCmdGammaConeBiasAngle;
 
 	G4UIcmdWithAString* fCmdPhantomMode;
 	G4UIcmdWithAString* fCmdSingleMaterial;

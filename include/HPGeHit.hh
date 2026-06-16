@@ -22,6 +22,12 @@ public:
 	G4String particleName;
 	G4double ekin{0};     // MeV
 	G4String creatorProcess;
+	G4bool fromPhantomGamma{false};
+	G4double sampleGammaEdep{0};          // keV
+	G4double sourceGammaEnergyKeV{-1.0};  // keV
+	G4double sampleGammaBiasWeight{1.0};
+	G4String sourceMaterial;
+	G4String sourceProcess;
 };
 
 using HPGeHitsCollection = G4THitsCollection<HPGeHit>;

@@ -86,6 +86,10 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 			G4double totalEDep = 0;
 			G4int nSteps = hc->entries();
 			G4double firstGammaE = -1;
+			G4double sampleGammaEDep = 0;
+			G4double sampleGammaFirstE = -1;
+			G4double sampleGammaBiasWeight = 1.0;
+			G4int sampleGammaHits = 0;
 			std::set<G4String> particles;
 			std::map<G4String, G4int> creatorCount;
 
@@ -97,8 +101,19 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 				if (h->particleName == "gamma" && firstGammaE < 0) {
 					firstGammaE = h->ekin;
 				}
+				if (h->fromPhantomGamma) {
+					sampleGammaEDep += h->sampleGammaEdep;
+					sampleGammaHits++;
+					if (sampleGammaFirstE < 0 && h->sourceGammaEnergyKeV > 0) {
+						sampleGammaFirstE = h->sourceGammaEnergyKeV / 1000.0;
+					}
+					if (sampleGammaHits == 1) {
+						sampleGammaBiasWeight = h->sampleGammaBiasWeight;
+					}
+				}
 			}
 			G4double smeared = SmearEnergy(totalEDep);
+			G4double sampleGammaSmeared = SmearEnergy(sampleGammaEDep);
 
 			// 拼接粒子名
 			G4String pnames;
@@ -122,6 +137,10 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 			man->FillNtupleSColumn(1, 6, pnames);
 			man->FillNtupleSColumn(1, 7, dominant);
 			man->FillNtupleSColumn(1, 8, "HPGe");
+			man->FillNtupleDColumn(1, 9, sampleGammaSmeared);
+			man->FillNtupleDColumn(1, 10, sampleGammaFirstE * 1000); // keV
+			man->FillNtupleIColumn(1, 11, sampleGammaHits);
+			man->FillNtupleDColumn(1, 12, sampleGammaBiasWeight);
 			man->AddNtupleRow(1);
 		}
 	}

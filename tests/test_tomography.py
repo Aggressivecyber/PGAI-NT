@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +14,7 @@ from run_tomography import (  # noqa: E402
     attenuation_from_counts,
     default_slab_half_width,
     fbp_reconstruct,
+    gen_macro,
     remove_angle_invariant_background,
     sart_tv_reconstruct,
 )
@@ -42,6 +44,19 @@ def test_zero_sample_count_does_not_create_extreme_fbp_outlier() -> None:
 def test_cttest_uses_thicker_slab_to_accumulate_axial_statistics() -> None:
     assert default_slab_half_width("cttest", 128) == 37
     assert default_slab_half_width("degeneracy", 128) == 10
+
+
+def test_tomography_macro_sets_threads_and_gradient_mode() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "run.mac"
+        gen_macro(path, "gradient_cylinder", 45.0, 12345, threads=12)
+        text = path.read_text()
+
+    assert "/run/numberOfThreads 12" in text
+    assert "/pgai/source/spotSize 65 mm" in text
+    assert "/pgai/phantom/mode gradient_cylinder" in text
+    assert "/pgai/run/angle 45 deg" in text
+    assert "/run/beamOn 12345" in text
 
 
 def test_angle_invariant_background_subtraction_preserves_rotating_signal() -> None:
@@ -122,5 +137,6 @@ if __name__ == "__main__":
     test_low_stat_projection_keeps_valid_detector_bins()
     test_zero_sample_count_does_not_create_extreme_fbp_outlier()
     test_cttest_uses_thicker_slab_to_accumulate_axial_statistics()
+    test_tomography_macro_sets_threads_and_gradient_mode()
     test_angle_invariant_background_subtraction_preserves_rotating_signal()
     test_sart_tv_beats_fbp_on_sparse_noisy_phantom()

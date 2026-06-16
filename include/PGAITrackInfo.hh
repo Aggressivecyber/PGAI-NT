@@ -11,6 +11,11 @@ class PGAITrackInfo : public G4VUserTrackInformation {
 public:
 	G4bool interactedInPhantom{false};
 	G4String lastPhantomProcess{""};
+	G4bool bornInPhantom{false};
+	G4String sourceMaterial{""};
+	G4String sourceProcess{""};
+	G4double sourceGammaEnergyKeV{-1.0};
+	G4double sourceBiasWeight{1.0};
 	void Print() const override {}
 };
 

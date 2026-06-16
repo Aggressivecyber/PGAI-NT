@@ -43,6 +43,10 @@ RunAction::RunAction() : G4UserRunAction() {
 	man->CreateNtupleSColumn("particle_names");
 	man->CreateNtupleSColumn("dominant_creator_process");
 	man->CreateNtupleSColumn("detector_name");
+	man->CreateNtupleDColumn("sample_gamma_edep_keV");
+	man->CreateNtupleDColumn("sample_gamma_first_energy_keV");
+	man->CreateNtupleIColumn("sample_gamma_hit_count");
+	man->CreateNtupleDColumn("sample_gamma_bias_weight");
 	man->FinishNtuple();
 }
 

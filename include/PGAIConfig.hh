@@ -45,6 +45,12 @@ struct PGAIConfig {
 	G4double resB = 0.0;
 	G4double resC = 0.0;
 
+	// ---- Variance reduction ----
+	// Prompt gamma cone bias: redirect sample-born gammas into a cone around HPGe.
+	// Calibration and unknown scans must use the same setting.
+	G4bool gammaConeBias = true;
+	G4double gammaConeBiasAngle = 10.0 * deg;
+
 	// ---- Phantom ----
 	// empty | single | calibration_block | degeneracy | steel | cttest | gradient_cylinder
 	G4String phantomMode = "empty";

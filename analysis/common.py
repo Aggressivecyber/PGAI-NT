@@ -31,7 +31,8 @@ TRANSMISSION_COLS = [
 HPGE_COLS = [
     "run_id", "event_id", "angle_deg", "total_edep_keV", "n_steps",
     "first_gamma_energy_keV", "particle_names", "dominant_creator_process",
-    "detector_name",
+    "detector_name", "sample_gamma_edep_keV", "sample_gamma_first_energy_keV",
+    "sample_gamma_hit_count", "sample_gamma_bias_weight",
 ]
 
 # ---- 几何参数 (须与 PGAIConfig 默认一致) ----

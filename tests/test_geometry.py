@@ -170,6 +170,59 @@ def test_hpge_collimator_small_aperture_faces_sample() -> None:
     assert "rotateX(90 * CLHEP::deg);  // Cons +z(HPGe-side larger hole) -> world +y" in detector
 
 
+def test_hpge_scores_sample_origin_gamma_signal() -> None:
+    track_info = _read("include/PGAITrackInfo.hh")
+    hit = _read("include/HPGeHit.hh")
+    stepping = _read("src/SteppingAction.cc")
+    hpge_sd = _read("src/HPGeSpectrometerSD.cc")
+    event = _read("src/EventAction.cc")
+    run = _read("src/RunAction.cc")
+    common = _read("analysis/common.py")
+
+    assert "bornInPhantom" in track_info
+    assert "sourceGammaEnergyKeV" in track_info
+    assert "fromPhantomGamma" in hit
+    assert "sampleGammaEdep" in hit
+
+    assert "GetSecondaryInCurrentStep" in stepping
+    assert "CopyInfoToTrack" in stepping
+    assert "sourceGammaEnergyKeV = secondary->GetKineticEnergy() / keV" in stepping
+
+    assert "PGAITrackInfo" in hpge_sd
+    assert "hit->fromPhantomGamma = info && info->bornInPhantom" in hpge_sd
+
+    assert "sampleGammaEDep" in event
+    assert "sample_gamma_edep_keV" in run
+    assert "sample_gamma_first_energy_keV" in run
+    assert "sample_gamma_hit_count" in run
+    assert '"sample_gamma_edep_keV"' in common
+
+
+def test_prompt_gamma_cone_bias_is_configurable_and_changes_gamma_direction() -> None:
+    config = _read("include/PGAIConfig.hh")
+    header = _read("include/PGAIMessenger.hh")
+    messenger = _read("src/PGAIMessenger.cc")
+    stepping = _read("src/SteppingAction.cc")
+    run = _read("src/RunAction.cc")
+    common = _read("analysis/common.py")
+
+    assert "gammaConeBias" in config
+    assert "gammaConeBiasAngle" in config
+    assert "fDirBias" in header
+    assert "fCmdGammaConeBias" in header
+    assert "fCmdGammaConeBiasAngle" in header
+    assert '"/pgai/bias/gammaCone"' in messenger
+    assert '"/pgai/bias/gammaConeAngle"' in messenger
+
+    assert "RandomDirectionInCone" in stepping
+    assert "ApplyPromptGammaConeBias" in stepping
+    assert "secondary->SetMomentumDirection" in stepping
+    assert "sourceBiasWeight" in stepping
+
+    assert "sample_gamma_bias_weight" in run
+    assert '"sample_gamma_bias_weight"' in common
+
+
 if __name__ == "__main__":
     test_rotating_sample_stage_never_overlaps_transmission_screen()
     test_cttest_phantom_fills_about_80_percent_of_fov()
@@ -179,3 +232,5 @@ if __name__ == "__main__":
     test_calibration_block_phantom_covers_scan_intersection_volume()
     test_hpge_collimator_is_long_and_close_to_target()
     test_hpge_collimator_small_aperture_faces_sample()
+    test_hpge_scores_sample_origin_gamma_signal()
+    test_prompt_gamma_cone_bias_is_configurable_and_changes_gamma_direction()

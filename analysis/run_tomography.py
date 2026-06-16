@@ -26,21 +26,25 @@ NT = ROOT / "build" / "NT"
 TOMO_RAW = C.RAW / "tomo"
 
 
-def gen_macro(path, mode, angle_deg, events, material=None):
-    lines = ["/pgai/source/spotSize 65 mm", f"/pgai/phantom/mode {mode}"]  # 匹配 FOV70
+def gen_macro(path, mode, angle_deg, events, material=None, threads=16):
+    lines = [
+        f"/run/numberOfThreads {threads}",
+        "/pgai/source/spotSize 65 mm",
+        f"/pgai/phantom/mode {mode}",
+    ]  # 匹配 FOV70
     if material:
         lines += [f"/pgai/phantom/singleMaterial {material}",
                   "/pgai/phantom/singleThickness 20 mm"]
-    lines += [f"/pgai/run/angle {angle_deg} deg", "/run/initialize", f"/run/beamOn {events}"]
+    lines += [f"/pgai/run/angle {angle_deg:g} deg", "/run/initialize", f"/run/beamOn {events}"]
     path.write_text("\n".join(lines) + "\n")
 
 
-def run_sim(tag, mode, angle_deg, events, material=None):
-    work = TOMO_RAW / tag
+def run_sim(tag, mode, angle_deg, events, material=None, raw_root=TOMO_RAW, threads=16):
+    work = Path(raw_root) / tag
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
-    gen_macro(work / "run.mac", mode, angle_deg, events, material)
+    gen_macro(work / "run.mac", mode, angle_deg, events, material, threads=threads)
     with open(work / "log.txt", "w") as lf:
         subprocess.run([str(NT), "run.mac"], cwd=work, stdout=lf, stderr=subprocess.STDOUT, check=True)
 
@@ -273,6 +277,9 @@ def main():
     ap.add_argument("--tv-weight", type=float, default=0.04, help="TV 正则强度")
     ap.add_argument("--tv-iters", type=int, default=1, help="每轮 SART 后的 TV 去噪步数")
     ap.add_argument("--tag", default="tomo", help="输出文件标签")
+    ap.add_argument("--threads", type=int, default=16)
+    ap.add_argument("--raw-root", type=Path, default=TOMO_RAW,
+                    help="raw projection directory; contains empty and sample_###")
     ap.add_argument("--skip-sim", action="store_true")
     args = ap.parse_args()
 
@@ -285,13 +292,14 @@ def main():
     if not args.skip_sim:
         # empty (I0, angle 无关, 跑一次)
         print(f"=== empty I0 (一次) ===")
-        run_sim("empty", "empty", 0, args.events)
+        run_sim("empty", "empty", 0, args.events, raw_root=args.raw_root, threads=args.threads)
         # 每角度 sample
         for k, a in enumerate(angs):
             print(f"=== sample angle {a:.1f}° ({k+1}/{len(angs)}) ===")
-            run_sim(f"sample_{k:03d}", args.mode, a, args.events, args.material)
+            run_sim(f"sample_{k:03d}", args.mode, a, args.events, args.material,
+                    raw_root=args.raw_root, threads=args.threads)
 
-    I0 = primary_image(TOMO_RAW / "empty", nz, nz)
+    I0 = primary_image(args.raw_root / "empty", nz, nz)
     # z 中心切片: 对轴向均匀的 cttest 聚合整根棒高度；其他 phantom 保持薄切片。
     cy = nz // 2
     slab_half = default_slab_half_width(args.mode, nz) if args.slab_half is None else args.slab_half
@@ -301,7 +309,7 @@ def main():
     min_i0 = adaptive_min_i0(I0c)
     sino = np.zeros((len(angs), nz))
     for k in range(len(angs)):
-        I = primary_image(TOMO_RAW / f"sample_{k:03d}", nz, nz)
+        I = primary_image(args.raw_root / f"sample_{k:03d}", nz, nz)
         Ic = I[:, slab].sum(axis=1)
         A = attenuation_from_counts(Ic, I0c, min_i0=min_i0)
         sino[k] = A
